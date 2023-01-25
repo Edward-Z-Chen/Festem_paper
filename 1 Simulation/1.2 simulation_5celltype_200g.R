@@ -21,12 +21,8 @@ library(Matrix)
 
 load("./results/counts_mean_r.RData")
 
-ecdf.em <- function(x){
-  pchisq(x,2)
-}
-
 my.wilcox <- function(x,label){
-  # labels should be T or F
+  # labels should be a logical vector
   wilcox.test(x[label],x[!label])$p.value
 }
 
