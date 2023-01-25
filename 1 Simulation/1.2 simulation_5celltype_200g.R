@@ -19,7 +19,7 @@ library(pracma)
 library(lcmix)
 library(Matrix)
 
-load("counts_mean_r.RData")
+load("./results/counts_mean_r.RData")
 
 ecdf.em <- function(x){
   pchisq(x,2)
