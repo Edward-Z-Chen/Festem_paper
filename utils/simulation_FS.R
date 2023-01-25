@@ -2,7 +2,7 @@ library(Seurat)
 library(DUBStepR)
 
 all.genes <- rownames(seurat.SD)
-## Festem_2g
+# Festem (Group parameter G = g_1) --------------
 FS.time.mat[i,1] <- time.mat[i,2]
 result.EM = data.frame(names = all.genes, p = p.adjust(em.result[1,],"BH"), EM = em.result.9[2,])
 tmp.na <- result.EM[is.na(result.EM$p),1]
@@ -19,7 +19,7 @@ gene.names <- gene.names[,1]
 gene.names <- c(gene.names,tmp.na)
 FS.gene.list[[1]][[i]] <- gene.names
 
-## Festem_3g
+# Festem (Group parameter G = g_2) --------------
 FS.time.mat[i,10] <- time.mat[i,15]
 result.EM = data.frame(names = all.genes, p = p.adjust(em.result.3g[1,],"BH"), EM = em.result.9.3g[2,])
 tmp.na <- result.EM[is.na(result.EM$p),1]
@@ -36,7 +36,7 @@ gene.names <- gene.names[,1]
 gene.names <- c(gene.names,tmp.na)
 FS.gene.list[[10]][[i]] <- gene.names
 
-## Festem_4g
+# Festem (Group parameter G = g_3) --------------
 FS.time.mat[i,11] <- time.mat[i,17]
 result.EM = data.frame(names = all.genes, p = p.adjust(em.result.4g[1,],"BH"), EM = em.result.9.4g[2,])
 tmp.na <- result.EM[is.na(result.EM$p),1]
@@ -53,7 +53,7 @@ gene.names <- gene.names[,1]
 gene.names <- c(gene.names,tmp.na)
 FS.gene.list[[11]][[i]] <- gene.names
 
-## Festem_5g
+# Festem (Group parameter G = g_4) --------------
 FS.time.mat[i,12] <- time.mat[i,19]
 result.EM = data.frame(names = all.genes, p = p.adjust(em.result.5g[1,],"BH"), EM = em.result.9.5g[2,])
 tmp.na <- result.EM[is.na(result.EM$p),1]
@@ -70,7 +70,7 @@ gene.names <- gene.names[,1]
 gene.names <- c(gene.names,tmp.na)
 FS.gene.list[[12]][[i]] <- gene.names
 
-## HVGvst2000
+# HVGvst --------------
 time.tmp <- peakRAM(
 seurat.SD <- FindVariableFeatures(seurat.SD, selection.method = "vst", nfeatures = 2000,verbose = FALSE)
 )
@@ -80,7 +80,7 @@ peak.memory.usage[i,"HVGvst"] <- time.tmp$Peak_RAM_Used_MiB
 
 FS.gene.list[[2]][[i]] <- VariableFeatures(seurat.SD)
 
-## HVGDisp2000
+# HVGdisp --------------
 time.tmp <- peakRAM(
 seurat.SD <- FindVariableFeatures(object = seurat.SD, selection.method = "disp", nfeatures = 2000,verbose = FALSE)
 )
@@ -89,7 +89,7 @@ total.memory.usage[i,"HVGdisp"] <- time.tmp$Total_RAM_Used_MiB
 peak.memory.usage[i,"HVGdisp"] <- time.tmp$Peak_RAM_Used_MiB
 FS.gene.list[[3]][[i]] <- VariableFeatures(seurat.SD)
 
-## DUBStepR
+# DUBStepR --------------
 time.tmp <- peakRAM(
 dub.list <- DUBStepR(seurat.SD@assays$RNA@data)
 )
@@ -101,62 +101,7 @@ dub <- dub.list[["optimal.feature.genes"]]
 FS.gene.list[[4]][[i]] <- dub
 rm(dub,dub.list)
 
-## HLG
-## Adapted from DUBStepR
-library(irlba)
-irlba_pca_fs <- function (expr_mat, pcs = c(2, 3)) 
-{
-  ## Taken from DUBStepR
-  lognorm <- expr_mat
-  nz_genes <- which(Matrix::rowSums(lognorm) != 0)
-  lognorm[nz_genes, ] <- lognorm[nz_genes, ]/log(2)
-  gene_names <- rownames(lognorm)
-  lognorm <- Matrix::Matrix(lognorm, sparse = TRUE)
-  rownames(lognorm) <- gene_names
-  nc <- ncol(lognorm)
-  expression_means <- Matrix::rowMeans(lognorm)
-  expression_vars <- Matrix::rowMeans((lognorm - expression_means)^2) * 
-    (nc/(nc - 1))
-  genes_to_keep <- expression_vars > 0
-  lognorm <- lognorm[genes_to_keep, ]
-  expression_means <- expression_means[genes_to_keep]
-  expression_vars <- expression_vars[genes_to_keep]
-  irlba_pca_res <- irlba::irlba(Matrix::t(lognorm), nu = 0, center = expression_means, nv = 30,
-                                scale = sqrt(expression_vars), right_only = TRUE)$v
-  row.names(irlba_pca_res) <- row.names(lognorm)
-  if (length(pcs) > 1) {
-    score <- Matrix::rowSums(abs(irlba_pca_res[, pcs]))
-  }
-  else {
-    score <- abs(irlba_pca_res[, pcs])
-  }
-  names(score) = gene_names[genes_to_keep]
-  return(sort(-score))
-}
-
-time.tmp <- peakRAM(
-PCA_Score <- irlba_pca_fs(expr_mat = seurat.SD@assays$RNA@data, pcs = 1:5)
-)
-FS.time.mat[i,5] <- time.tmp$Elapsed_Time_sec
-total.memory.usage[i,"HLG_5pc"] <- time.tmp$Total_RAM_Used_MiB
-peak.memory.usage[i,"HLG_5pc"] <- time.tmp$Peak_RAM_Used_MiB
-
-FS.gene.list[[5]][[i]] <- names(PCA_Score)
-
-time.tmp <- peakRAM(
-  PCA_Score <- irlba_pca_fs(expr_mat = seurat.SD@assays$RNA@data, pcs = 1:10)
-)
-FS.time.mat[i,9] <- time.tmp$Elapsed_Time_sec
-total.memory.usage[i,"HLG_10pc"] <- time.tmp$Total_RAM_Used_MiB
-peak.memory.usage[i,"HLG_10pc"] <- time.tmp$Peak_RAM_Used_MiB
-
-FS.gene.list[[9]][[i]] <- names(PCA_Score)
-
-print("HLG Finish!")
-rm(PCA_Score)
-
-##devianceFS
-## This can enable batch!!! (in Shiyang)
+# devianceFS --------------
 library(scry)
 time.tmp <- peakRAM(
 devianceFS_out <- scry::devianceFeatureSelection(object = seurat.SD@assays$RNA@counts)
@@ -170,7 +115,8 @@ FS.gene.list[[6]][[i]] <- names(sort(devianceFS_out, decreasing = TRUE))
 print("devianceFS Finish!")
 rm(devianceFS_out)
 
-## TrendVar
+# TrendVar --------------
+## Codes are modified from https://github.com/prabhakarlab/DUBStepR
 source("trendVar.R")
 library(SingleCellExperiment)
 trendVarFS <- function(counts, data) {
@@ -194,7 +140,8 @@ FS.gene.list[[7]][[i]] <- trendvar["genes"][[1]]
 print("TrendVar Finish")
 rm(trendvar)
 
-##M3DropDANB
+# M3DropDANB --------------
+## Codes are modified from https://github.com/prabhakarlab/DUBStepR
 source("UseM3D.R")
 tryCatch({
   withTimeout({
