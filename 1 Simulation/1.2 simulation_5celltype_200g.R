@@ -611,7 +611,7 @@ for (i in 1:B){
   gc(verbose = F)
   
   ################## Feature Selection ###########################
-  source("simulation_FS.R")
+  source("../utils/simulation_FS.R")
   save(FS.gene.list,FS.time.mat,file = "./results/NB_200DE_5type_FS.RData")
   gene.list <- list(FS.gene.list[[1]][[i]][1:500],
                     FS.gene.list[[2]][[i]][1:500],
