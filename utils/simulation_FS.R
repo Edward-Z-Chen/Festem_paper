@@ -117,7 +117,7 @@ rm(devianceFS_out)
 
 # TrendVar --------------
 ## Codes are modified from https://github.com/prabhakarlab/DUBStepR
-source("/Festem/utils/trendVar.R")
+source("../utils/trendVar.R")
 library(SingleCellExperiment)
 trendVarFS <- function(counts, data) {
   st <- system.time({
