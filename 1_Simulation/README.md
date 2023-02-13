@@ -1,8 +1,9 @@
 # Simulation
 
 - 1.1 Estimate the parameters of the negative binomial distribution from the PBMC3K dataset, which can be downloaded from https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz. Labels are generated according to https://satijalab.org/seurat/articles/pbmc3k_tutorial.html. (pbmc_tutorial.rds upload??)
-
 - 1.2 & 1.3 Five cell types setting with high noise (1.2) and low noise (1.3). Results are stored in the "results" folder.
+- 1.4 & 1.5 Two cell types setting with high noise (1.4) and low noise (1.5). Results are stored in the "results" folder.
+- 1.6 TN test in the four settings.
 
 ## Dependency
 The scripts in this repository are excuted in R (v4.0.5) and use the following R packages:
