@@ -18,6 +18,7 @@ Competing DEG detection methods use the following R packages:
   - MAST: MAST==1.16.0
   - singleCellHaystack: singleCellHaystack==0.3.4
   - ROSeq: ROSeq==1.2.10, limma==3.46.0
+  - TN test: 
 
 Competing feature selection methods use the following R packages:
 
