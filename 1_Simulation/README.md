@@ -25,7 +25,7 @@ Competing feature selection methods use the following R packages:
   - devianceFS: scry==1.2.0
   - trendVar: scran==1.18.7
 
-Most of the above can be installed from CRAN and bioconductor. 
+Most of the above packages can be installed from CRAN and bioconductor. 
 
 For EMDE (a preview version of Festem), install from !!!(.tar.gz). 
 
