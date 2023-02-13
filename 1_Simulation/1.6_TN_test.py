@@ -23,7 +23,7 @@ import igraph as ig
 import louvain
 import tracemalloc
 
-os.chdir("./Simulation_V3")
+os.chdir("./results")
 time_cost = np.zeros(20)
 tn_result = list()
 memory_usage = list()
@@ -67,7 +67,11 @@ def scanpy_cluster(X, features, tsne=None, plot=False, resolution=1.0):
 
 for batch in range(1,21):
     # Load data
-    adata = read_r("NB_200DE_sep_2type_"+str(batch)+".RData")
+    adata = read_r("NB_200DE_2type_"+str(batch)+".RData")
+    #adata = read_r("NB_400DE_2type_"+str(batch)+".RData")
+    #adata = read_r("NB_200DE_5type_"+str(batch)+".RData")
+    #adata = read_r("NB_400DE_5type_"+str(batch)+".RData")
+    
     counts = adata["counts"]
     features = counts.index.values
     counts = counts.transpose()
@@ -91,6 +95,9 @@ for batch in range(1,21):
         labels1 = scanpy_cluster(X1, features, plot=False, resolution=0.01 * k)
         if len(np.unique(labels1)) == 2:
             break
+        # If five groups    
+        #if len(np.unique(labels1)) == 5:
+        #    break
 
     # Fit hyperplanes using X1
     from sklearn.svm import SVC
@@ -154,7 +161,7 @@ for batch in range(1,21):
     
 #p_frame.to_csv("pbmc_TN_test_one_versus_the_rest.csv",index = False,header=False)
 
-
+# For other settings, change the following file names
 np.save("NB_200DE_2celltype_TN_test_time.npy",time_cost)
 # open a file, where you ant to store the data
 file = open('NB_200DE_2celltype_TN_test', 'wb')
@@ -173,24 +180,14 @@ pickle.dump(memory_usage, file)
 # close the file
 file.close()
 
-
-# open a file, where you stored the pickled data
-#file = open('TN_test', 'rb')
-
-# dump information to that file
-#data = pickle.load(file)
-
-# close the file
-#file.close()
-
 # Load in results and write csv
 file = open('NB_200DE_2celltype_TN_test', 'rb')
 results = pickle.load(file)
 file.close()
 p_frame = np.zeros((20000,20))
 for j in range(0,20):
-    p_frame[:,j] = results[j].iloc[:,0]
-    #p_frame[:,j] = np.min(results[j],axis = 1) * results[j].shape[1]
+    #p_frame[:,j] = results[j].iloc[:,0]
+    p_frame[:,j] = np.min(results[j],axis = 1) * results[j].shape[1]
 p_frame = pd.DataFrame(p_frame)
 p_frame.to_csv("NB_200DE_2celltype_TN_test.csv",index = False,header=False,na_rep = "NA")
 
