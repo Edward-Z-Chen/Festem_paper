@@ -18,6 +18,13 @@ Competing DEG detection methods use the following R packages:
   - singleCellHaystack: singleCellHaystack==0.3.4
   - ROSeq: ROSeq==1.2.10, limma==3.46.0
 
+Competing feature selection methods use the following R packages:
+
+  - HVGvst, HVGdisp: Seurat==4.0.1
+  - DUBStepR: DUBStepR==1.2.0
+  - devianceFS: scry==1.2.0
+  - trendVar: scran==1.18.7
+
 Most of the above can be installed from CRAN and bioconductor. 
 
 For EMDE (a preview version of Festem), install from !!!(.tar.gz). 
