@@ -1,0 +1,723 @@
+library(SingleCellExperiment)
+library(scater)
+library(stringr)
+library(stats)
+library(BiocParallel)
+library(BiocGenerics)
+library(parallel)
+library(MASS)
+library(nloptr)
+library(Seurat)
+library(R.utils)
+library(ggplot2)
+library(ggpubr)
+library(tidyverse)
+library(edgeR)
+library(EMDE)
+library(peakRAM)
+library(pracma)
+library(lcmix)
+library(Matrix)
+
+load("./results/counts_mean_r.RData")
+
+my.wilcox <- function(x,label){
+  # labels should be T or F
+  wilcox.test(x[label],x[!label])$p.value
+}
+
+umap.for.plot <- function(umap,cluster){
+  umap <- umap@cell.embeddings
+  umap <- as.data.frame(umap)
+  cbind(umap,cluster = cluster)
+}
+
+ratio <- 0.4
+DE.gene <- 400
+nonDE.gene <- 19600
+samples <- 3000
+cor_num <- 200
+rho <- 0.99
+corr <- matrix(rho, nrow = cor_num, ncol = cor_num)
+corr <- corr + diag(rep(1-rho, cor_num))
+mu.list <- numeric(DE.gene+nonDE.gene)
+sigma.list <- numeric(DE.gene+nonDE.gene)
+sigma.list2 <- numeric(DE.gene)
+counts.mean <- counts.nb0[1,]
+counts.r <- counts.nb0[2,]
+counts.mean2 <- counts.nb1[1,]
+counts.r2 <- counts.nb1[2,]
+seedlist <- c(234,654,953,1245,563,11143,632,920,804,336,
+              154,4373,6213,791,8832,9012,1255,7864,15627,2341)
+B <- 20
+num.core <- 12
+save.image("./results/NB_400DE_2type_workspace.RData")
+
+### Adjusted p-value list
+adjpvalue.list <- vector("list",17)
+names(adjpvalue.list) <- c("Festem_0.05","Festem_0.05_f",
+                           "DESeq2","DESeq2_full",
+                           "EdgeR","EdgeR_full",
+                           "MAST","Wilcoxon",
+                           "ROSeq","Festem_3group_0.05","Festem_3group_0.05f",
+                           "Festem_7group_0.05","Festem_7group_0.05f",
+                           "Festem_9group_0.05","Festem_9group_0.05f",
+                           "singleCellHaystack_PCA",
+                           "singleCellHaystack_UMAP")
+for (i in 1:length(adjpvalue.list)){
+  adjpvalue.list[[i]] <- matrix(nrow = B, ncol = DE.gene+nonDE.gene)
+}
+time.mat <- matrix(nrow = B, ncol = length(adjpvalue.list))
+colnames(time.mat) <- names(adjpvalue.list)
+
+cluster.acc <- numeric(B)
+cluster.labels.mat <- matrix(nrow = B, ncol = samples)
+
+FS.gene.list <- vector("list",9)
+names(FS.gene.list) <- c("Festem_5","HVGvst","HVGdisp","DUBStepR",
+                         "devianceFS","TrendVar","Festem_3","Festem_7","Festem_9")
+for (i in 1:length(FS.gene.list)){
+  FS.gene.list[[i]] <- vector("list",B)
+}
+FS.time.mat <- matrix(nrow = B,ncol = length(FS.gene.list))
+colnames(FS.time.mat) <- names(FS.gene.list)
+
+
+FS.label.list <- vector("list",9)
+names(FS.label.list) <- c("Festem","HVGvst","HVGdisp","DUBStepR",
+                          "devianceFS","TrendVar","Festem_3","Festem_7","Festem_9")
+for (i in 1:length(FS.label.list)){
+  FS.label.list[[i]] <- matrix(nrow = B, ncol = samples)
+}
+
+FS.ARI.frame <- matrix(nrow = B,ncol = length(FS.label.list))
+colnames(FS.ARI.frame) <- names(FS.label.list)
+
+FS.SI.frame <- matrix(nrow = B,ncol = length(FS.label.list))
+colnames(FS.SI.frame) <- names(FS.label.list)
+
+FS.DB.frame <- matrix(nrow = B,ncol = length(FS.label.list))
+colnames(FS.DB.frame) <- names(FS.label.list)
+
+FS.label.true.list <- vector("list",9)
+names(FS.label.true.list) <- c("Festem","HVGvst","HVGdisp","DUBStepR",
+                               "devianceFS","TrendVar","Festem_3","Festem_7","Festem_9")
+for (i in 1:length(FS.label.true.list)){
+  FS.label.true.list[[i]] <- matrix(nrow = B, ncol = samples)
+}
+
+FS.ARI.true.frame <- matrix(nrow = B,ncol = length(FS.label.true.list))
+colnames(FS.ARI.true.frame) <- names(FS.label.true.list)
+
+FS.SI.true.frame <- matrix(nrow = B,ncol = length(FS.label.true.list))
+colnames(FS.SI.true.frame) <- names(FS.label.true.list)
+
+FS.DB.true.frame <- matrix(nrow = B,ncol = length(FS.label.true.list))
+colnames(FS.DB.true.frame) <- names(FS.label.true.list)
+
+all.method <- c("Festem_0.05","Festem_0.05f",
+                "DESeq2","DESeq2_full",
+                "EdgeR","EdgeR_full",
+                "MAST","Wilcoxon",
+                "ROSeq","Festem_3group_0.05","Festem_3group_0.05f",
+                "Festem_7group_0.05","Festem_7group_0.05f",
+                "Festem_9group_0.05","Festem_9group_0.05f",
+                "singleCellHaystack_PCA",
+                "singleCellHaystack_UMAP",
+                "HVGvst","HVGdisp","DUBStepR",
+                "devianceFS","TrendVar")
+total.memory.usage <- matrix(nrow = B,ncol = length(all.method))
+peak.memory.usage <- matrix(nrow = B,ncol = length(all.method))
+colnames(total.memory.usage) <- all.method
+colnames(peak.memory.usage) <- all.method
+
+for (i in 1:B){
+  print(paste0("Round ",i,":"))
+  set.seed(seedlist[i])
+  cl <- makeCluster(getOption("cl.cores", num.core))
+  clusterSetRNGStream(cl, iseed = seedlist[i])
+  counts <- matrix(rep(0,(DE.gene+nonDE.gene)*samples),ncol = samples)
+  colnames(counts) <- paste("Cell",seq(1:samples),sep = "")
+  rownames(counts) <- paste("Gene",seq(1:(DE.gene+nonDE.gene)),sep = "")
+  ## non-DE genes
+  generate.counts <- function(mu,n,sig){
+    rnbinom(n,sig,mu=mu)
+  }
+  
+  ### Correlated Part
+  mu <- sample(counts.mean[counts.mean>= 0.5 & counts.mean<=30],cor_num,replace = T)
+  dispersion <- sample(counts.r[counts.r>=0.2 & counts.r<=50],cor_num,replace = T)
+  gamma_dta <- rmvgamma(samples, shape = dispersion, rate = dispersion/(mu), corr = corr)
+  counts[1:cor_num,] <- (apply(gamma_dta, 1, function(lam){rpois(length(lam), lambda = lam)}))
+  mu.list[1:cor_num] <- mu
+  sigma.list[1:cor_num] <- dispersion
+  
+  mu <- sample(counts.mean[counts.mean>=0.5 & counts.mean<=30],nonDE.gene - cor_num,replace = T)
+  mu.list[(cor_num+1):nonDE.gene] <- mu
+  sigma.list[(cor_num+1):nonDE.gene] <- sample(counts.r[counts.r>=0.2 & counts.r<=50],nonDE.gene - cor_num,replace = T)
+  for (k in (cor_num+1):nonDE.gene){
+    counts[k,] <- rnbinom(samples,sigma.list[k],mu = mu.list[k])
+  }
+  
+  ## DEGs
+  mu <- sample(counts.mean[counts.mean>=0.5 & counts.mean<=30],DE.gene,replace = T)
+  log.foldchange <- runif(DE.gene,1.5,2.5)
+  
+  mu2 <- mu*2^log.foldchange
+  mu.list[(nonDE.gene+1):(nonDE.gene+DE.gene)] <- mu
+  sigma.list[(nonDE.gene+1):(nonDE.gene+DE.gene)] <- sample(counts.r[counts.r>=0.2 & counts.r<=50],DE.gene,replace = T)
+  sigma.list2 <- sample(counts.r2[counts.r>=0.2 & counts.r<=50],DE.gene,replace = T)
+  for (k in 1:DE.gene){
+    counts[(k+nonDE.gene),1:(samples*ratio)] <- rnbinom((samples*ratio),sigma.list[k+nonDE.gene],mu = mu[k])
+    counts[(k+nonDE.gene),(samples*ratio+1):samples] <- rnbinom((samples*(1-ratio)),sigma.list2[k],mu = mu2[k])
+  }
+  save(counts,mu.list,log.foldchange,sigma.list,sigma.list2,file = paste0("./results/counts/NB_400DE_2type_",i,".RData"))
+  print("Finish generating counts!")
+  
+  # Clustering
+  seurat.SD <- CreateSeuratObject(counts)
+  seurat.SD <- NormalizeData(seurat.SD)
+  
+  SD <- SingleCellExperiment(
+    assays = list(counts = counts)
+  )
+  SD <- logNormCounts(SD)
+  assayNames(SD)[2] <- "normcounts"
+  
+  seurat.SD <- FindVariableFeatures(seurat.SD,selection.method = "vst",nfeatures = 1000)
+  seurat.SD <- ScaleData(seurat.SD)
+  seurat.SD <- RunPCA(seurat.SD, verbose = FALSE)
+  seurat.SD <- FindNeighbors(object = seurat.SD, dims = 1:10,reduction = "pca")
+  
+  for (k in 1:100){
+    seurat.SD <- FindClusters(object = seurat.SD, resolution = 0.01*k, verbose = FALSE)
+    if (nlevels(seurat.SD@active.ident)>=2){
+      print(paste0("Resolution: ", 0.01*k,"; Group number: ",nlevels(seurat.SD@active.ident)))
+      break
+    }
+  }
+  seurat.SD <- AddMetaData(seurat.SD,seurat.SD@active.ident,"Louvain")
+  seurat.SD <- AddMetaData(seurat.SD,c(rep(0,samples * ratio),rep(1,samples * (1-ratio))),"truth")
+  
+  colData(SD)[,1] <- as.numeric(seurat.SD@active.ident)
+  names(SD@colData@listData)[1] <- "condition"
+  
+  cluster.labels.mat[i,] <- as.numeric(seurat.SD@active.ident)
+  cluster.labels <- factor(as.numeric(seurat.SD@active.ident))
+  cluster.acc[i] <- mclust::adjustedRandIndex(as.numeric(cluster.labels),
+                                              seurat.SD@meta.data$truth)
+  print("Finish clustering!")
+  
+  ############### UMAP ##################
+  seurat.SD <- FindVariableFeatures(seurat.SD,selection.method = "vst",nfeatures = 1000)
+  seurat.SD <- ScaleData(seurat.SD)
+  seurat.SD <- RunPCA(seurat.SD)
+  seurat.SD <- RunUMAP(seurat.SD,dims = 1:10)
+  if (i == B | i == 1){
+    pdf("./results/NB_400DE_2type_UMAP_initial.pdf",width=4,height=4,onefile = T)
+    print(DimPlot(seurat.SD,label = T, group.by = "truth",pt.size = 1))
+    print(DimPlot(seurat.SD,label = T, group.by = "Louvain",pt.size = 1))
+    dev.off()
+  }
+  
+  ################## SingleCellHaystack ########################
+  library(singleCellHaystack)
+  tryCatch({
+    withTimeout({
+      time.tmp <- peakRAM(
+        haystack_umap <- haystack(seurat.SD,coord = "umap",method = "2D")
+      )
+      time.mat[i,"singleCellHaystack_UMAP"] <- time.tmp$Elapsed_Time_sec
+      total.memory.usage[i,"singleCellHaystack_UMAP"] <- time.tmp$Total_RAM_Used_MiB
+      peak.memory.usage[i,"singleCellHaystack_UMAP"] <- time.tmp$Peak_RAM_Used_MiB
+      adjpvalue.list[["singleCellHaystack_UMAP"]][i,] <- exp(haystack_umap$results$log.p.adj)
+      
+      time.tmp <- peakRAM(
+        haystack_pca <- haystack(seurat.SD,coord = "pca",dims = 1:10,method = "highD")
+      )
+      time.mat[i,"singleCellHaystack_PCA"] <- time.tmp$Elapsed_Time_sec
+      total.memory.usage[i,"singleCellHaystack_PCA"] <- time.tmp$Total_RAM_Used_MiB
+      peak.memory.usage[i,"singleCellHaystack_PCA"] <- time.tmp$Peak_RAM_Used_MiB
+      adjpvalue.list[["singleCellHaystack_PCA"]][i,] <- exp(haystack_pca$results$log.p.adj)
+      print("singleCellHaystack Finish!")
+    },timeout = 30000,onTimeout = "error")
+  }, error = function(e){
+    cat("singleCellHaystack Error! Simulation ",i,".\n")
+    cat("ERROR :",conditionMessage(e),"\n")
+  })
+  save(adjpvalue.list,time.mat,cluster.acc,cluster.labels.mat,total.memory.usage,peak.memory.usage,file = "./results/NB_400DE_2type_DEG.RData")
+  rm(haystack_umap,haystack_pca)
+  gc(verbose = F)
+  
+  
+  ################## ROSeq ########################
+  library(ROSeq)
+  library(limma)
+  library(edgeR)
+  tryCatch({
+    withTimeout({
+      time.tmp <- peakRAM({
+        counts2<-limma::voom(ROSeq::TMMnormalization(counts))
+        output<-ROSeq(countData=counts2$E, condition = colData(SD)[,1], numCores=6)
+      })
+      time.mat[i,"ROSeq"] <- time.tmp$Elapsed_Time_sec*6
+      total.memory.usage[i,"ROSeq"] <- time.tmp$Total_RAM_Used_MiB
+      peak.memory.usage[i,"ROSeq"] <- time.tmp$Peak_RAM_Used_MiB
+      
+      adjpvalue.list[["ROSeq"]][i,] <- output[,"pAdj"]
+      print("ROSeq Finish!")
+    },timeout = 30000,onTimeout = "error")
+  }, error = function(e){
+    cat("ROSeq Error! Simulation ",i,".\n")
+    cat("ERROR :",conditionMessage(e),"\n")
+  })
+  save(adjpvalue.list,time.mat,cluster.acc,cluster.labels.mat,total.memory.usage,peak.memory.usage,file = "./results/NB_400DE_2type_DEG.RData")
+  rm(counts2,output)
+  gc(verbose = F)
+  # detach("package:ROSeq",unload = TRUE)
+  
+  ## Festem
+  alpha.label <- numeric(nlevels(cluster.labels)-1)
+  for (g in 1:length(alpha.label)) {
+    alpha.label[g] <- sum(cluster.labels==g)/ncol(seurat.SD)
+  }
+  
+  ################## Festem_0.05 ########################
+  time.tmp <- peakRAM(
+    em.result <- parApply(cl,counts,1,em.stat,
+                          alpha.ini=rbind(alpha.label,c(rep(1/nlevels(cluster.labels),length(alpha.label)))),
+                          k0=150,C=1e-3,labels = cluster.labels,group.num = nlevels(cluster.labels),
+                          prior.weight = 0.05,earlystop = 1e-5)
+  )
+  time.mat[i,"Festem_0.05"] <- time.tmp$Elapsed_Time_sec*num.core
+  total.memory.usage[i,"Festem_0.05"] <- time.tmp$Total_RAM_Used_MiB
+  peak.memory.usage[i,"Festem_0.05"] <- time.tmp$Peak_RAM_Used_MiB
+  adjpvalue.list[["Festem_0.05"]][i,] <- p.adjust(em.result[1,],"BH")
+  
+  ################## Festem_0.05 (adjust) ########################
+  time.tmp <- peakRAM(
+    em.result.9 <- parApply(cl,counts,1,em.stat,
+                            alpha.ini=rbind(alpha.label,c(rep(1/nlevels(cluster.labels),length(alpha.label)))),
+                            k0=150,C=1e-3,labels = cluster.labels,group.num = nlevels(cluster.labels),
+                            prior.weight = 0.9,earlystop = 1e-5)
+  )
+  time.mat[i,"Festem_0.05f"] <- time.tmp$Elapsed_Time_sec*num.core+time.mat[i,"Festem_0.05"]
+  total.memory.usage[i,"Festem_0.05f"] <- max(time.tmp$Total_RAM_Used_MiB,total.memory.usage[i,"Festem_0.05"])
+  peak.memory.usage[i,"Festem_0.05f"] <- max(time.tmp$Peak_RAM_Used_MiB,peak.memory.usage[i,"Festem_0.05"])
+  adjpvalue.list[["Festem_0.05f"]][i,] <- adjpvalue.list[["Festem_0.05"]][i,]
+  adjpvalue.list[["Festem_0.05f"]][i,em.result.9[2,]<0 & (!is.na(em.result.9[2,])) ] <- NA
+  print("Festem Test Finish!")
+  save(adjpvalue.list,time.mat,cluster.acc,cluster.labels.mat,total.memory.usage,peak.memory.usage,file = "./results/NB_400DE_2type_DEG.RData")
+  
+  ################## Wilcoxon ########################
+  tryCatch({
+    withTimeout({
+      time.tmp <- peakRAM(
+        wil.tmp <- parApply(cl,counts,1,my.wilcox,label = (cluster.labels==1))
+      )
+      time.mat[i,"Wilcoxon"] <- time.tmp$Elapsed_Time_sec*num.core
+      total.memory.usage[i,"Wilcoxon"] <- time.tmp$Total_RAM_Used_MiB
+      peak.memory.usage[i,"Wilcoxon"] <- time.tmp$Peak_RAM_Used_MiB
+      adjpvalue.list[["Wilcoxon"]][i,] <- p.adjust(wil.tmp,"BH")
+      print("Wilcoxon Finish!")
+    },timeout = 15000,onTimeout = "error")
+  }, error = function(e){
+    cat("Wilcoxon Error! Simulation ",i,".\n")
+    cat("ERROR :",conditionMessage(e),"\n")
+  })
+  save(adjpvalue.list,time.mat,cluster.acc,cluster.labels.mat,total.memory.usage,peak.memory.usage,file = "./results/NB_400DE_2type_DEG.RData")
+  stopCluster(cl)
+  rm(wil.tmp)
+  gc(verbose = F)
+  
+  snowparam <- SnowParam(workers = num.core, type = "SOCK", log = F)
+  register(snowparam, default = TRUE)
+  registered()
+  
+  ################## DESeq2 (filter & no filter) ########################
+  library(DESeq2)
+  tryCatch({
+    withTimeout({
+      time.tmp <- peakRAM(
+        {colData(SD)[,1] <- factor(colData(SD)[,1])
+        DE.counts <- DESeqDataSetFromMatrix(counts+1,colData(SD),~condition)
+        DEseq.results <- DESeq(DE.counts,parallel = T,quiet = T)}
+      )
+      time.mat[i,c("DESeq2","DESeq2_full")] <- time.tmp$Elapsed_Time_sec*num.core
+      total.memory.usage[i,c("DESeq2","DESeq2_full")] <- time.tmp$Total_RAM_Used_MiB
+      peak.memory.usage[i,c("DESeq2","DESeq2_full")] <- time.tmp$Peak_RAM_Used_MiB
+      
+      DEseq.results <- DESeq2::results(DEseq.results,alpha = 0.05)
+      adjpvalue.list[["DESeq2"]][i,] <- DEseq.results$padj
+      adjpvalue.list[["DESeq2_full"]][i,] <- p.adjust(DEseq.results$pvalue,"BH")
+      print("DESeq2 Finish!")
+    },timeout = 15000,onTimeout = "error")
+  }, error = function(e){
+    cat("DESeq2 Error! Simulation ",i,".\n")
+    cat("ERROR :",conditionMessage(e),"\n")
+  })
+  rm(DE.counts,DEseq.results)
+  save(adjpvalue.list,time.mat,cluster.acc,cluster.labels.mat,total.memory.usage,peak.memory.usage,file = "./results/NB_400DE_2type_DEG.RData")
+  
+  ################## EdgeR (filtered) ########################
+  library(edgeR)
+  tryCatch({
+    withTimeout({
+      time.tmp <- peakRAM(
+        {exprSet <- DGEList(counts = as.matrix(counts), group = cluster.labels)
+        design <- model.matrix(~cluster.labels)
+        colnames(design) <- levels(cluster.labels)
+        keep <- filterByExpr(exprSet, design)
+        exprSet <- exprSet[keep, , keep.lib.sizes=FALSE]
+        exprSet <- calcNormFactors(exprSet)
+        exprSet <- estimateDisp(exprSet,design)
+        fit <- glmQLFit(exprSet, design)
+        qlf <- glmQLFTest(fit, coef=2:(nlevels(cluster.labels)))}
+      )
+      time.mat[i,"EdgeR"] <- time.tmp$Elapsed_Time_sec
+      total.memory.usage[i,"EdgeR"] <- time.tmp$Total_RAM_Used_MiB
+      peak.memory.usage[i,"EdgeR"] <- time.tmp$Peak_RAM_Used_MiB
+      
+      colnames(adjpvalue.list[["EdgeR"]]) <- rownames(counts)
+      adjpvalue.list[["EdgeR"]][i,rownames(qlf@.Data[[2]])] <- p.adjust(qlf$table$PValue,"BH")
+      print("EdgeR Finish!")
+    },timeout = 15000,onTimeout = "error")
+  }, error = function(e){
+    cat("EdgeR filtered Error! Simulation ",i,".\n")
+    cat("ERROR :",conditionMessage(e),"\n")
+  })
+  save(adjpvalue.list,time.mat,cluster.acc,cluster.labels.mat,total.memory.usage,peak.memory.usage,file = "./results/NB_400DE_2type_DEG.RData")
+  
+  ################## EdgeR (no filter) ########################
+  tryCatch({
+    withTimeout({
+      time.tmp <- peakRAM(
+        {exprSet <- DGEList(counts = as.matrix(counts), group = cluster.labels)
+        design <- model.matrix(~cluster.labels)
+        colnames(design) <- levels(cluster.labels)
+        exprSet <- calcNormFactors(exprSet)
+        exprSet <- estimateDisp(exprSet,design)
+        fit <- glmQLFit(exprSet, design)
+        qlf <- glmQLFTest(fit, coef=2:(nlevels(cluster.labels)))}
+      )
+      time.mat[i,"EdgeR_full"] <- time.tmp$Elapsed_Time_sec
+      total.memory.usage[i,"EdgeR_full"] <- time.tmp$Total_RAM_Used_MiB
+      peak.memory.usage[i,"EdgeR_full"] <- time.tmp$Peak_RAM_Used_MiB
+      
+      colnames(adjpvalue.list[["EdgeR_full"]]) <- rownames(counts)
+      adjpvalue.list[["EdgeR_full"]][i,rownames(qlf@.Data[[2]])] <- p.adjust(qlf$table$PValue,"BH")
+      print("EdgeR full Finish!")
+    },timeout = 15000,onTimeout = "error")
+  }, error = function(e){
+    cat("EdgeR full Error! Simulation ",i,".\n")
+    cat("ERROR :",conditionMessage(e),"\n")
+  })
+  save(adjpvalue.list,time.mat,cluster.acc,cluster.labels.mat,total.memory.usage,peak.memory.usage,file = "./results/NB_400DE_2type_DEG.RData")
+  rm(exprSet,design,fit,qlf,keep)
+  
+  ################## MAST ########################
+  library(MAST)
+  tryCatch({
+    withTimeout({
+      time.tmp <- peakRAM(
+        {mast.SD <- FromMatrix(as.matrix(normcounts(SD)),data.frame(condition=colData(SD)[,1],wellKey = colnames(counts)),check_sanity = F)
+        zlm.output <- zlm(~ condition,mast.SD)
+        zlm.lr <- lrTest(zlm.output, 'condition')}
+      )
+      time.mat[i,"MAST"] <- time.tmp$Elapsed_Time_sec
+      total.memory.usage[i,"MAST"] <- time.tmp$Total_RAM_Used_MiB
+      peak.memory.usage[i,"MAST"] <- time.tmp$Peak_RAM_Used_MiB
+      MAST.tmp <- zlm.lr[,,'Pr(>Chisq)']
+      adjpvalue.list[["MAST"]][i,] <- p.adjust(MAST.tmp[,3],"BH")
+      print("MAST Finish!")
+    },timeout = 15000,onTimeout = "error")
+  }, error = function(e){
+    cat("MAST Error! Simulation ",i,".\n")
+    cat("ERROR :",conditionMessage(e),"\n")
+  })
+  save(adjpvalue.list,time.mat,cluster.acc,cluster.labels.mat,total.memory.usage,peak.memory.usage,file = "./results/NB_400DE_2type_DEG.RData")
+  rm(mast.SD,zlm.output,zlm.lr,MAST.tmp)
+  gc(verbose = F)
+  # detach("package:MAST",unload = TRUE)
+  
+  bpstop(snowparam)
+  
+  ################## Festem 3groups prior #####################
+  for (k in 1:100){
+    seurat.SD <- FindClusters(object = seurat.SD, resolution = 0.01*k, verbose = FALSE)
+    if (nlevels(seurat.SD@active.ident)>=3){
+      print(paste0("Resolution: ", 0.01*k,"; Group number: ",nlevels(seurat.SD@active.ident)))
+      break
+    }
+  }
+  cluster.labels <- factor(as.numeric(seurat.SD@active.ident))
+  alpha.label <- numeric(nlevels(cluster.labels)-1)
+  for (g in 1:length(alpha.label)) {
+    alpha.label[g] <- sum(cluster.labels==g)/ncol(seurat.SD)
+  }
+  cl <- makeCluster(getOption("cl.cores", num.core))
+  clusterSetRNGStream(cl, iseed = seedlist[i])
+  ################## Festem_3group_0.05 ########################
+  time.tmp <- peakRAM(
+    em.result.3g <- parApply(cl,counts,1,em.stat,
+                             alpha.ini=rbind(alpha.label,c(rep(1/nlevels(cluster.labels),length(alpha.label)))),
+                             k0=150,C=1e-3,labels = cluster.labels,group.num = nlevels(cluster.labels),
+                             prior.weight = 0.05,earlystop = 1e-5)
+  )
+  time.mat[i,"Festem_3group_0.05"] <- time.tmp$Elapsed_Time_sec*num.core
+  total.memory.usage[i,"Festem_3group_0.05"] <- time.tmp$Total_RAM_Used_MiB
+  peak.memory.usage[i,"Festem_3group_0.05"] <- time.tmp$Peak_RAM_Used_MiB
+  
+  adjpvalue.list[["Festem_3group_0.05"]][i,] <- p.adjust(em.result.3g[1,],"BH")
+  
+  ################## Festem_3group_0.05 (adjust) ########################
+  time.tmp <- peakRAM(
+    em.result.9.3g <- parApply(cl,counts,1,em.stat,
+                               alpha.ini=rbind(alpha.label,c(rep(1/nlevels(cluster.labels),length(alpha.label)))),
+                               k0=150,C=1e-3,labels = cluster.labels,group.num = nlevels(cluster.labels),
+                               prior.weight = 0.9,earlystop = 1e-5)
+  )
+  time.mat[i,"Festem_3group_0.05f"] <- time.tmp$Elapsed_Time_sec*num.core+time.mat[i,"Festem_3group_0.05"]
+  total.memory.usage[i,"Festem_3group_0.05f"] <- max(time.tmp$Total_RAM_Used_MiB,total.memory.usage[i,"Festem_3group_0.05"])
+  peak.memory.usage[i,"Festem_3group_0.05f"] <- max(time.tmp$Peak_RAM_Used_MiB,peak.memory.usage[i,"Festem_3group_0.05"])
+  
+  adjpvalue.list[["Festem_3group_0.05f"]][i,] <- adjpvalue.list[["Festem_3group_0.05"]][i,]
+  adjpvalue.list[["Festem_3group_0.05f"]][i,em.result.9.3g[2,]<0 & (!is.na(em.result.9.3g[2,])) ] <- NA
+  print("Festem Test 3groups Finish!")
+  save(adjpvalue.list,time.mat,cluster.acc,cluster.labels.mat,total.memory.usage,peak.memory.usage,file = "./results/NB_400DE_2type_DEG.RData")
+  stopCluster(cl)
+  gc(verbose = F)
+  
+  ################## Festem 4groups prior #####################
+  for (k in 1:100){
+    seurat.SD <- FindClusters(object = seurat.SD, resolution = 0.01*k, verbose = FALSE)
+    if (nlevels(seurat.SD@active.ident)>=4){
+      print(paste0("Resolution: ", 0.01*k,"; Group number: ",nlevels(seurat.SD@active.ident)))
+      break
+    }
+  }
+  cluster.labels <- factor(as.numeric(seurat.SD@active.ident))
+  alpha.label <- numeric(nlevels(cluster.labels)-1)
+  for (g in 1:length(alpha.label)) {
+    alpha.label[g] <- sum(cluster.labels==g)/ncol(seurat.SD)
+  }
+  cl <- makeCluster(getOption("cl.cores", num.core))
+  clusterSetRNGStream(cl, iseed = seedlist[i])
+  ################## Festem_4group_0.05 ########################
+  time.tmp <- peakRAM(
+    {em.result.4g <- parApply(cl,counts,1,em.stat,
+                              alpha.ini=rbind(alpha.label,c(rep(1/nlevels(cluster.labels),length(alpha.label)))),
+                              k0=150,C=1e-3,labels = cluster.labels,group.num = nlevels(cluster.labels),
+                              prior.weight = 0.05,earlystop = 1e-5)}
+  )
+  time.mat[i,"Festem_4group_0.05"] <- time.tmp$Elapsed_Time_sec*num.core
+  total.memory.usage[i,"Festem_4group_0.05"] <- time.tmp$Total_RAM_Used_MiB
+  peak.memory.usage[i,"Festem_4group_0.05"] <- time.tmp$Peak_RAM_Used_MiB
+  
+  adjpvalue.list[["Festem_4group_0.05"]][i,] <- p.adjust(em.result.4g[1,],"BH")
+  
+  ################## Festem_4group_0.05f ########################
+  time.tmp <- peakRAM(
+    {em.result.9.4g <- parApply(cl,counts,1,em.stat,
+                                alpha.ini=rbind(alpha.label,c(rep(1/nlevels(cluster.labels),length(alpha.label)))),
+                                k0=150,C=1e-3,labels = cluster.labels,group.num = nlevels(cluster.labels),
+                                prior.weight = 0.9,earlystop = 1e-5)}
+  )
+  time.mat[i,"Festem_4group_0.05f"] <- time.tmp$Elapsed_Time_sec*num.core+time.mat[i,"Festem_4group_0.05"]
+  total.memory.usage[i,"Festem_4group_0.05f"] <- max(time.tmp$Total_RAM_Used_MiB,total.memory.usage[i,"Festem_4group_0.05"])
+  peak.memory.usage[i,"Festem_4group_0.05f"] <- max(time.tmp$Peak_RAM_Used_MiB,peak.memory.usage[i,"Festem_4group_0.05"])
+  
+  adjpvalue.list[["Festem_4group_0.05f"]][i,] <- adjpvalue.list[["Festem_4group_0.05"]][i,]
+  adjpvalue.list[["Festem_4group_0.05f"]][i,em.result.9.4g[2,]<0 & (!is.na(em.result.9.4g[2,])) ] <- NA
+  print("Festem Test 4groups Finish!")
+  save(adjpvalue.list,time.mat,cluster.acc,cluster.labels.mat,total.memory.usage,peak.memory.usage,file = "./results/NB_400DE_2type_DEG.RData")
+  stopCluster(cl)
+  gc(verbose = F)
+  
+  ################## Festem 5groups prior #####################
+  for (k in 1:100){
+    seurat.SD <- FindClusters(object = seurat.SD, resolution = 0.01*k, verbose = FALSE)
+    if (nlevels(seurat.SD@active.ident)>=5){
+      print(paste0("Resolution: ", 0.01*k,"; Group number: ",nlevels(seurat.SD@active.ident)))
+      break
+    }
+  }
+  cluster.labels <- factor(as.numeric(seurat.SD@active.ident))
+  alpha.label <- numeric(nlevels(cluster.labels)-1)
+  for (g in 1:length(alpha.label)) {
+    alpha.label[g] <- sum(cluster.labels==g)/ncol(seurat.SD)
+  }
+  cl <- makeCluster(getOption("cl.cores", num.core))
+  clusterSetRNGStream(cl, iseed = seedlist[i])
+  ################## Festem_5group_0.05 ########################
+  time.tmp <- peakRAM(
+    {em.result.5g <- parApply(cl,counts,1,em.stat,
+                              alpha.ini=rbind(alpha.label,c(rep(1/nlevels(cluster.labels),length(alpha.label)))),
+                              k0=150,C=1e-3,labels = cluster.labels,group.num = nlevels(cluster.labels),
+                              prior.weight = 0.05,earlystop = 1e-5)}
+  )
+  time.mat[i,"Festem_5group_0.05"] <- time.tmp$Elapsed_Time_sec*num.core
+  total.memory.usage[i,"Festem_5group_0.05"] <- time.tmp$Total_RAM_Used_MiB
+  peak.memory.usage[i,"Festem_5group_0.05"] <- time.tmp$Peak_RAM_Used_MiB
+  adjpvalue.list[["Festem_5group_0.05"]][i,] <- p.adjust(em.result.5g[1,],"BH")
+  
+  ################## Festem_5group_0.05 (adjust) ########################
+  time.tmp <- peakRAM(
+    {em.result.9.5g <- parApply(cl,counts,1,em.stat,
+                                alpha.ini=rbind(alpha.label,c(rep(1/nlevels(cluster.labels),length(alpha.label)))),
+                                k0=150,C=1e-3,labels = cluster.labels,group.num = nlevels(cluster.labels),
+                                prior.weight = 0.9,earlystop = 1e-5)}
+  )
+  time.mat[i,"Festem_5group_0.05f"] <- time.tmp$Elapsed_Time_sec*num.core+time.mat[i,"Festem_5group_0.05"]
+  total.memory.usage[i,"Festem_5group_0.05f"] <- max(time.tmp$Total_RAM_Used_MiB,total.memory.usage[i,"Festem_5group_0.05"])
+  peak.memory.usage[i,"Festem_5group_0.05f"] <- max(time.tmp$Peak_RAM_Used_MiB,peak.memory.usage[i,"Festem_5group_0.05"])
+  
+  adjpvalue.list[["Festem_5group_0.05f"]][i,] <- adjpvalue.list[["Festem_5group_0.05"]][i,]
+  adjpvalue.list[["Festem_5group_0.05f"]][i,em.result.9.5g[2,]<0 & (!is.na(em.result.9.5g[2,])) ] <- NA
+  print("Festem Test 5groups Finish!")
+  save(adjpvalue.list,time.mat,cluster.acc,cluster.labels.mat,total.memory.usage,peak.memory.usage,file = "./results/NB_400DE_2type_DEG.RData")
+  stopCluster(cl)
+  gc(verbose = F)
+  
+  ################## Feature Selection ###########################
+  source("../utils/simulation_FS.R")
+  save(FS.gene.list,FS.time.mat,file = "./results/NB_400DE_2type_FS.RData")
+  gene.list <- list(FS.gene.list[[1]][[i]][1:500],
+                    FS.gene.list[[2]][[i]][1:500],
+                    FS.gene.list[[3]][[i]][1:500],
+                    head(FS.gene.list[[4]][[i]],500),
+                    head(FS.gene.list[[5]][[i]],500),
+                    head(FS.gene.list[[6]][[i]],500),
+                    FS.gene.list[[7]][[i]][1:500],
+                    FS.gene.list[[8]][[i]][1:500],
+                    FS.gene.list[[9]][[i]][1:500])
+  umap.list <- vector("list",length(gene.list))
+  names(umap.list) <- names(FS.label.list)
+  plots.list <- vector("list",length(gene.list))
+  
+  for (j in 1:length(gene.list)){
+    if (length(gene.list[[j]])==0){ next;}
+    
+    print(paste0("Method ",j))
+    ## Louvain
+    label.list.tmp <- matrix(nrow = 10, ncol = ncol(seurat.SD))
+    ARI.tmp <- numeric(10)
+    num.tmp <- numeric(10)
+    seurat.SD <- ScaleData(seurat.SD,features = gene.list[[j]])
+    seurat.SD <- RunPCA(seurat.SD, verbose = FALSE,features = gene.list[[j]])
+    seurat.SD <- FindNeighbors(object = seurat.SD, dims = 1:min(10,length(gene.list[[j]])-1),reduction = "pca")
+    
+    for (k in 1:10){
+      seurat.SD <- FindClusters(object = seurat.SD, resolution = 0.1*k,verbose = F)
+      label.list.tmp[k,] <- seurat.SD@active.ident
+      num.tmp <- nlevels(seurat.SD@active.ident)
+      ARI.tmp[k] <- mclust::adjustedRandIndex(seurat.SD@active.ident,seurat.SD@meta.data$truth)
+    }
+    
+    num.tmp <- abs(num.tmp-2)
+    ARI.tmp[num.tmp!=min(num.tmp)] <- 0
+    FS.ARI.frame[i,j] <- max(ARI.tmp)
+    FS.label.list[[j]][i,] <- label.list.tmp[which.max(ARI.tmp),]
+    
+    
+    umap.list[[j]] <- RunUMAP(seurat.SD,reduction = "pca", dims = 1:min(10,length(gene.list[[j]]))-1)@reductions[["umap"]]
+    dis <- as.matrix(dist(umap.list[[j]]@cell.embeddings, method = "euclidean"))
+    FS.SI.frame[i,j] <- summary(cluster::silhouette(x=seurat.SD@meta.data$truth,dist = dis))[["avg.width"]]
+    
+    FS.DB.frame[i,j] <- clusterSim::index.DB(umap.list[[j]]@cell.embeddings, 
+                                             seurat.SD@meta.data$truth+1)$DB
+    
+    
+    umap.tmp <- umap.for.plot(umap.list[[j]],label.list.tmp[which.max(ARI.tmp),])
+    
+    class_avg <- umap.tmp %>%
+      group_by(cluster) %>%
+      summarise(
+        UMAP_1 = median(UMAP_1),
+        UMAP_2 = median(UMAP_2)
+      )
+    plots.list[[j]] <- ggplot(umap.tmp, aes(x=UMAP_1, y=UMAP_2, color=cluster)) +
+      geom_point(cex=0.5) + theme_pubr()+theme(legend.position="none") +
+      geom_text(aes(x=UMAP_1,y = UMAP_2,label = cluster), data = class_avg,inherit.aes = F, color = "black",fontface = "bold",size = 4)+
+      labs(title = names(umap.list)[j])
+    gc(verbose = F)
+  }
+  save(FS.gene.list,FS.time.mat,FS.ARI.frame,FS.DB.frame,FS.label.list,FS.SI.frame,
+       umap.list,plots.list,
+       total.memory.usage,peak.memory.usage,file = "./results/NB_400DE_2type_FS.RData")
+  gc(verbose = F)
+  
+  ## True informative gene number
+  gene.list <- list(FS.gene.list[[1]][[i]][1:400],
+                    FS.gene.list[[2]][[i]][1:400],
+                    FS.gene.list[[3]][[i]][1:400],
+                    head(FS.gene.list[[4]][[i]],400),
+                    head(FS.gene.list[[5]][[i]],400),
+                    head(FS.gene.list[[6]][[i]],400),
+                    FS.gene.list[[7]][[i]][1:400],
+                    FS.gene.list[[8]][[i]][1:400],
+                    FS.gene.list[[9]][[i]][1:400])
+  umap.true.list <- vector("list",length(gene.list))
+  names(umap.true.list) <- names(FS.label.true.list)
+  plots.true.list <- vector("list",length(gene.list))
+  
+  for (j in 1:length(gene.list)){
+    if (length(gene.list[[j]])==0){ next;}
+    
+    ## Louvain
+    label.list.tmp <- matrix(nrow = 10, ncol = ncol(seurat.SD))
+    ARI.tmp <- numeric(10)
+    num.tmp <- numeric(10)
+    seurat.SD <- ScaleData(seurat.SD,features = gene.list[[j]])
+    seurat.SD <- RunPCA(seurat.SD, verbose = FALSE,features = gene.list[[j]])
+    seurat.SD <- FindNeighbors(object = seurat.SD, dims = 1:min(10,length(gene.list[[j]])-1),reduction = "pca")
+    
+    for (k in 1:10){
+      seurat.SD <- FindClusters(object = seurat.SD, resolution = 0.1*k,verbose = F)
+      label.list.tmp[k,] <- seurat.SD@active.ident
+      num.tmp <- nlevels(seurat.SD@active.ident)
+      ARI.tmp[k] <- mclust::adjustedRandIndex(seurat.SD@active.ident,seurat.SD@meta.data$truth)
+    }
+    
+    num.tmp <- abs(num.tmp-2)
+    ARI.tmp[num.tmp!=min(num.tmp)] <- 0
+    FS.ARI.true.frame[i,j] <- max(ARI.tmp)
+    FS.label.true.list[[j]][i,] <- label.list.tmp[which.max(ARI.tmp),]
+    
+    
+    umap.true.list[[j]] <- RunUMAP(seurat.SD,reduction = "pca", dims = 1:min(10,length(gene.list[[j]]))-1)@reductions[["umap"]]
+    dis <- as.matrix(dist(umap.true.list[[j]]@cell.embeddings, method = "euclidean"))
+    FS.SI.true.frame[i,j] <- summary(cluster::silhouette(x=seurat.SD@meta.data$truth,dist = dis))[["avg.width"]]
+    
+    FS.DB.true.frame[i,j] <- clusterSim::index.DB(umap.true.list[[j]]@cell.embeddings, 
+                                                  seurat.SD@meta.data$truth+1)$DB
+    
+    
+    umap.tmp <- umap.for.plot(umap.true.list[[j]],label.list.tmp[which.max(ARI.tmp),])
+    
+    class_avg <- umap.tmp %>%
+      group_by(cluster) %>%
+      summarise(
+        UMAP_1 = median(UMAP_1),
+        UMAP_2 = median(UMAP_2)
+      )
+    plots.true.list[[j]] <- ggplot(umap.tmp, aes(x=UMAP_1, y=UMAP_2, color=cluster)) +
+      geom_point(cex=0.5) + theme_pubr()+theme(legend.position="none") +
+      geom_text(aes(x=UMAP_1,y = UMAP_2,label = cluster), data = class_avg,inherit.aes = F, color = "black",fontface = "bold",size = 4)+
+      labs(title = names(umap.list)[j])
+    gc(verbose = F)
+  }
+  save(FS.gene.list,FS.time.mat,FS.ARI.frame,FS.DB.frame,FS.label.list,FS.SI.frame,
+       umap.list,plots.list,
+       FS.ARI.true.frame,FS.DB.true.frame,FS.label.true.list,FS.SI.true.frame,
+       umap.true.list,plots.true.list,
+       total.memory.usage,peak.memory.usage,
+       file = "./results/NB_400DE_2type_FS.RData")
+  gc(verbose = F)
+  
+  rm(list = ls())
+  load("./results/NB_400DE_2type_workspace.RData")
+  load("./results/NB_400DE_2type_FS.RData")
+  load("./results/NB_400DE_2type_DEG.RData")
+  
+}
