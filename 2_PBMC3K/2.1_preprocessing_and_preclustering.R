@@ -37,3 +37,9 @@ cluster.labels <- pbmc@active.ident
 save(cluster.labels,file = "./results/pbmc3k_label.RData")
 DimPlot(pbmc, reduction = "umap", label = TRUE, pt.size = 0.5) + NoLegend()
 saveRDS(pbmc, file = "./results/pbmc3k.rds")
+
+
+# Count matrix for TN test (python) ---------------------------------------
+
+counts <- as.matrix(pbmc@assays$RNA@counts)
+save(counts,file = "./results/pbmc3k_counts_forpython.RData")
