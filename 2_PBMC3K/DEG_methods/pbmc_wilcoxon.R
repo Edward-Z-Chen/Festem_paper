@@ -9,8 +9,8 @@ library(MASS)
 library(nloptr)
 library(edgeR)
 library(biclust)
-pbmc <- readRDS("pbmc_tutorial.rds")
-load("pbmc_label.RData")
+pbmc <- readRDS("pbmc3k.rds")
+load("./results/pbmc3k_label.RData")
 cluster.label[c("CGGGCATGACCCAA-1","CTTGATTGATCTTC-1")] <- "Platelet"
 pbmc <- pbmc[,cluster.label!="Platelet"]
 cluster.label <- factor(cluster.label[cluster.label!="Platelet"])
