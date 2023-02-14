@@ -4,6 +4,7 @@
 - 1.2 & 1.3 Five cell types setting with high noise (1.2) and low noise (1.3). Results are stored in the "results" folder.
 - 1.4 & 1.5 Two cell types setting with high noise (1.4) and low noise (1.5). Results are stored in the "results" folder.
 - 1.6 TN test in the four settings.
+- 1.7 Figure 2, S2 and S3. (Before running this code, unzip "data_for_plot.tar.gz" in the results folder.)
 
 ## Dependency
 The scripts in this repository are excuted in R (v4.0.5) and use the following R packages:
@@ -18,7 +19,7 @@ Competing DEG detection methods use the following R packages:
   - MAST: MAST==1.16.0
   - singleCellHaystack: singleCellHaystack==0.3.4
   - ROSeq: ROSeq==1.2.10, limma==3.46.0
-  - TN test: 
+  - TN test: truncated_normal==0.4.
 
 Competing feature selection methods use the following R packages:
 
@@ -36,4 +37,8 @@ For lcmix, install from R-Forge:
 install.packages("lcmix", repos="http://R-Forge.R-project.org")
 ```
 
+For TN test, install from pip:
+```
+pip install truncated_normal
+```
 
