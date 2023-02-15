@@ -14,10 +14,7 @@ cl <- makeCluster(getOption("cl.cores", 12))
 lusterSetRNGStream(cl, iseed = 321)
 
 pbmc <- readRDS("./results/pbmc3k.rds")
-load("pbmc_labels_hvg8000.RData")
-# load("pbmc_hvg8000_10groups.RData")
-# resolution = 0.15, pca = 1:10
-# load("pbmc_hvg8000_5groups.RData")
+load("./results/pbmc3k_preclustering.RData")
 
 counts <- pbmc@assays$RNA@counts
 raw.lib <- pbmc@meta.data$nCount_RNA
@@ -73,4 +70,4 @@ em.result <- parApply(cl,counts,1,em.stat,alpha.ini=rbind(alpha.label,rep(1/8,7)
 em.result9 <- parApply(cl,counts,1,em.stat,alpha.ini=rbind(alpha.label,rep(1/8,7)),k0=100,C=1e-3,labels = cluster.labels,group.num = 8,prior.weight=0.9,earlystop = 1e-5)
 print(paste0("Time: ",difftime(Sys.time(),time.tmp,units = "secs")))
 stopCluster(cl)
-save(em.result,em.result9,file = "pbmc_Festem.RData")
+save(em.result,em.result9,file = "./results/pbmc_Festem.RData")

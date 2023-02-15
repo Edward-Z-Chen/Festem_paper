@@ -9,7 +9,7 @@ library(parallel)
 library(MASS)
 library(nloptr)
 library(DESeq2)
-pbmc <- readRDS("pbmc3k.rds")
+pbmc <- readRDS("./results/pbmc3k.rds")
 pbmc <- as.SingleCellExperiment(pbmc)
 load("./results/pbmc3k_label.RData")
 cluster.label[c("CGGGCATGACCCAA-1","CTTGATTGATCTTC-1")] <- "Platelet"
