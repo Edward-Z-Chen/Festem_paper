@@ -6,5 +6,6 @@
 - 2.4 Run TN test.
 - 2.5 Run competing feature selection methods.
 - 2.6 Clustering and UMAP reduction based on top 1000 genes selected by each method and the top 15 PCs.
+- 2.7 Calculate CH indices of the PCs and clustering results derived from genes selected by feature selection methods.
 
 **Remark**: For results in 2.3 and 2.4, we only provide a tidy version derived from 2.x in the "results" folder.
