@@ -18,7 +18,6 @@ load("./results/pbmc3k_preclustering.RData")
 levels(cluster.labels) <- c(1:8,8)
 counts <- pbmc@assays$RNA@counts
 raw.lib <- pbmc@meta.data$nCount_RNA
-rm(pbmc)
 counts <- as.matrix(counts)
 
 # For prior with 7 groups
