@@ -11,7 +11,7 @@ library(edgeR)
 library(EMDE)
 set.seed(321)
 cl <- makeCluster(getOption("cl.cores", 12))
-lusterSetRNGStream(cl, iseed = 321)
+clusterSetRNGStream(cl, iseed = 321)
 
 pbmc <- readRDS("./results/pbmc3k.rds")
 load("./results/pbmc3k_preclustering.RData")
