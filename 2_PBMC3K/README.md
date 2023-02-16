@@ -7,5 +7,6 @@
 - 2.5 Run competing feature selection methods.
 - 2.6 Clustering and UMAP reduction based on top 1000 genes selected by each method and the top 15 PCs.
 - 2.7 Calculate CH indices of the PCs and clustering results derived from genes selected by feature selection methods.
+- 2.8 Construct silver standard of DEGs based on housekeeping genes downloaded from https://housekeeping.unicamp.br/Housekeeping_GenesHuman.RData.
 
-**Remark**: For results in 2.3 and 2.4, we only provide a tidy version in the "results" folder processed by script 2.8. 
+**Remark**: For results in 2.3 and 2.4, we only provide a tidy version derived from 2.9 in the "results" folder.
