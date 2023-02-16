@@ -15,13 +15,17 @@ lusterSetRNGStream(cl, iseed = 321)
 
 pbmc <- readRDS("./results/pbmc3k.rds")
 load("./results/pbmc3k_preclustering.RData")
-
+levels(cluster.labels) <- c(1:8,8)
 counts <- pbmc@assays$RNA@counts
 raw.lib <- pbmc@meta.data$nCount_RNA
 rm(pbmc)
 counts <- as.matrix(counts)
 
-levels(cluster.labels) <- c(1:8,8)
+# For prior with 7 groups
+# load("./results/pbmc3k_preclustering_7g.RData")
+# For prior with 10 groups
+# load("./results/pbmc3k_preclustering_10g.RData")
+# Also change the name of the output with corresponding suffix.
 
 # Preprocessing -----------------------------------------------------------
 
