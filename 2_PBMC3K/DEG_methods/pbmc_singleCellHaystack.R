@@ -19,3 +19,8 @@ pbmc <- RunUMAP(pbmc, dims = 1:15)
 haystack_umap <- haystack(pbmc,coord = "umap",method = "2D")
 haystack_pca <- haystack(pbmc,coord = "pca",dims = 1:15,method = "highD")
 save(haystack_pca,haystack_umap,file = "./results/pbmc_haystack.RData")
+
+pbmc <- RunUMAP(pbmc, dims = 1:10)
+haystack_umap <- haystack(pbmc,coord = "umap",method = "2D")
+haystack_pca <- haystack(pbmc,coord = "pca",dims = 1:10,method = "highD")
+save(haystack_pca,haystack_umap,file = "./results/pbmc_haystack_10PC.RData")
