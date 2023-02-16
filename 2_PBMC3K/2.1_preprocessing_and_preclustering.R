@@ -22,6 +22,14 @@ DimPlot(pbmc, reduction = "umap",label = T)
 cluster.labels <- pbmc@active.ident
 save(cluster.labels,file = "./results/pbmc_preclustering.RData")
 
+pbmc <- FindClusters(pbmc, resolution = 0.8)
+cluster.labels <- pbmc@active.ident
+save(cluster.labels,file = "./results/pbmc_preclustering_10g.RData")
+
+pbmc <- FindClusters(pbmc, resolution = 0.3)
+cluster.labels <- pbmc@active.ident
+save(cluster.labels,file = "./results/pbmc_preclustering_7g.RData")
+
 ## Using top 2000 genes selected by HVGvst as labels for DEG detection methods.
 pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
 pbmc <- ScaleData(pbmc)
