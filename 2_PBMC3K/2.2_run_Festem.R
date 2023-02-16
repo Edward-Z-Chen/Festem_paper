@@ -71,3 +71,7 @@ em.result9 <- parApply(cl,counts,1,em.stat,alpha.ini=rbind(alpha.label,rep(1/8,7
 print(paste0("Time: ",difftime(Sys.time(),time.tmp,units = "secs")))
 stopCluster(cl)
 save(em.result,em.result9,file = "./results/pbmc_Festem.RData")
+
+## \gamma = 0.01
+em.result <- parApply(cl,counts,1,em.stat,alpha.ini=rbind(alpha.label,rep(1/8,7)),k0=100,C=1e-3,labels = cluster.labels,group.num = 8,prior.weight=0.01,earlystop = 1e-5)
+save(em.result,em.result9,file = "./results/pbmc_Festem_gamma0.01.RData")
