@@ -173,3 +173,50 @@ ggplot(num_reject,aes(x = method,y = num,fill = method))+
   theme(legend.position = "bottom",
         axis.text.x = element_text(angle = 90))+
   guides(color = guide_legend(nrow = 4))
+
+## Figure 3 (A) -- left top ------------------------------------------------
+power_frame2 <- power_frame2[c(1,5,7,9,10,14,17,18),]
+power_frame2[c(1,6),1] <- c("Festem","singleCellHaystack")
+my_color <- my_color[c(1,5,7,9,10,13,15,18)]
+names(my_color)[7] <- "singleCellHaystack"
+my_shape <- c(16,15,17,18,7,8,9,10)
+names(my_shape) <- names(my_color)
+
+ggplot(data = power_frame2,mapping = aes(x = recall, y = precision))+
+  geom_point(aes(color = method, shape = method),
+             size = 4,stroke = 1)+
+  scale_x_continuous(limits = c(0.1,1))+
+  scale_y_continuous(limits = c(0.2,1))+
+  coord_trans(y=double_exp())+
+  geom_function(fun = ~ {1/(2/0.9-1/.x)},color = "grey75",linetype = "dashed")+
+  geom_function(fun = ~ {1/(2/0.8-1/.x)},color = "grey75",linetype = "dashed")+
+  geom_function(fun = ~ {1/(2/0.7-1/.x)},color = "grey75",linetype = "dashed")+
+  geom_function(fun = ~ {1/(2/0.6-1/.x)},color = "grey75",linetype = "dashed")+
+  geom_function(fun = ~ {1/(2/0.5-1/.x)},color = "grey75",linetype = "dashed")+
+  geom_function(fun = ~ {1/(2/0.4-1/.x)},color = "grey75",linetype = "dashed")+
+  geom_function(fun = ~ {1/(2/0.3-1/.x)},color = "grey75",linetype = "dashed")+
+  theme_pubr()+
+  geom_hline(yintercept = 1-0.05,linetype = "dashed",color = "red")+
+  scale_color_manual(values = my_color)+
+  scale_shape_manual(values = my_shape)+
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(angle = 0))+
+  guides(color = guide_legend(nrow = 2))
+
+num_reject <- num_reject[num_reject$method %in% c(power_frame2$method,"singleCellHaystack-UMAP"),]
+num_reject$method <- factor(num_reject$method)
+levels(num_reject$method) <- plyr::mapvalues(levels(num_reject$method),
+                                             c("singleCellHaystack-UMAP"),
+                                             c("singleCellHaystack"))
+ggplot(num_reject,aes(x = method,y = num,fill = method))+
+  geom_bar(stat = "identity",width = 1)+
+  theme_pubr()+
+  geom_text(aes(label=num), vjust=1.6, color="white", size=3.5)+
+  scale_fill_manual(values = my_color)+
+  theme(legend.position = "bottom",
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+  guides(color = guide_legend(nrow = 1))+
+  labs(x = NULL,y = "Number")
+
