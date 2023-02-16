@@ -17,3 +17,6 @@ rm(list = ls())
 
 source("./DEG_methods/pbmc_singleCellHaystack.R")
 rm(list = ls())
+
+source("./DEG_methods/pbmc_ROSeq.R")
+rm(list = ls())
