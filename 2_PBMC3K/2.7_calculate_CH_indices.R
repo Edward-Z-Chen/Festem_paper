@@ -19,7 +19,7 @@ for (j in 1:length(CH.index)){
     pbmc <- FindNeighbors(object = pbmc, dims = 1:15)
     pbmc <- FindClusters(object = pbmc, resolution = 1)
     pca <- pbmc@reductions$pca@cell.embeddings[,1:15]
-    CH.index[j] <- calinhara(x=pca,clustering = as.numeric(label.list[[i]]))
+    CH.index[j] <- calinhara(x=pca,clustering = as.numeric(pbmc@active.ident))
   }
 }
 save(CH.index,file = "./results/pbmc3k_CH.RData")
