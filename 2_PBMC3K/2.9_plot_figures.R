@@ -234,6 +234,8 @@ dev.off()
 
 # Figure 4 ----------------------------------------------------------------
 load("./results/pbmc3k_clustering_UMAP.RData")
+my.color <- hue_pal()(13)
+names(my.color) <- 1:13
 ## Figure 4A --left ----------------------------------------------------------------
 label.tmp <- label.list[[1]]
 levels(label.tmp) <- rank(-summary(label.tmp),ties.method = "first")
@@ -717,5 +719,161 @@ ggplot(data = label_ARI_frame,aes(x = reso,y = method,fill = ARI))+
 dev.off()
 
 # Figure S8 ---------------------------------------------------------------
+load("./results/pbmc3k_clustering_UMAP.RData")
+for (i in 1:length(label.list)){
+  label.tmp <- label.list[[i]]
+  levels(label.tmp) <- rank(-summary(label.tmp),ties.method = "first")
+  if (i == 2) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),3:9,c(4,5,8,6,3,7,10))
+  }
+  if (i == 3) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),2:8,c(3,2,4,5,6,7,10))
+  }
+  if (i == 4) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),5:9,c(9,7,6,5,10))
+  }
+  if (i == 5) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),3:9,c(4,8,5,3,9,7,6))
+  }
+  if (i == 6) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),2:12,c(3,4,2,6,9,7,5,11,12,10,13))
+  }
+  umap.tmp <- umap.for.plot(umap.list[[1]],label.tmp)
+  
+  class_avg <- umap.tmp %>%
+    group_by(cluster) %>%
+    summarise(
+      UMAP_1 = median(UMAP_1),
+      UMAP_2 = median(UMAP_2)
+    )
+  umap.tmp <- filter(umap.tmp, UMAP_1<0 & UMAP_2>-5)
+  umap.tmp$cluster <- factor(umap.tmp$cluster)
+  class_avg <- class_avg[class_avg$cluster %in% levels(umap.tmp$cluster),]
+  plots.list[[i]] <- ggplot(umap.tmp, aes(x=UMAP_1, y=UMAP_2, color=cluster)) + 
+    geom_point(cex=0.1) + theme_pubr()+theme(legend.position="none") +
+    # ggrepel::geom_label_repel(data = class_avg,aes(x=UMAP_1,y = UMAP_2,label = allgenes),label.padding = unit(0.1,'cm'))
+    geom_text(aes(x=UMAP_1,y = UMAP_2,label = cluster), data = class_avg,inherit.aes = F, color = "black",fontface = "bold",size = 4)+
+    labs(title = names(label.list)[i])+
+    scale_x_continuous(limits = c(-10,-3))+
+    scale_y_continuous(limits = c(-5,8))
+  if (i %in% c(2,3)){
+    plots.list[[i]] <- plots.list[[i]]+scale_color_manual(values = my.color[c(5)],name = "Clusters")
+  } else{
+    plots.list[[i]] <- plots.list[[i]]+scale_color_manual(values = my.color[c(9)],name = "Clusters")
+  }
+}
 
+pbmc <- readRDS("./results/pbmc3k.rds")
+ref <- pbmc@active.ident
+ref[c("CGGGCATGACCCAA-1","CTTGATTGATCTTC-1")] <- "Platelet"
+pbmc <- pbmc[,ref!="Platelet"]
+marker_list <- c("CD27","SELL","CCR7","CCL5","CST7","NKG7","CD8A")
+feature_plot_list <- vector("list",length = length(marker_list)+2)
 
+for (i in 1:length(marker_list)){
+  data.tmp <- plots.list[[1]]$data
+  data.tmp$cluster <- factor(data.tmp$cluster)
+  exp.tmp <- pbmc@assays$RNA@data[marker_list[i],rownames(data.tmp)]
+  data.tmp <- cbind.data.frame(data.tmp,exp = exp.tmp)
+  umap.tmp$cluster <- factor(umap.tmp$cluster)
+  feature_plot_list[[i]] <- 
+    ggplot(data.tmp,mapping = aes(x=UMAP_1, y=UMAP_2,color = exp)) + 
+    geom_point(cex=0.5,shape = 16)+ 
+    scale_color_gradient(low = "grey75",high = "#CD0404")+
+    theme_pubr()+theme(legend.position="right") +
+    scale_x_continuous(limits = c(-10,-3))+
+    scale_y_continuous(limits = c(-5,8))+
+    labs(title = marker_list[i])
+}
+feature_plot_list[8:9] <- plots.list[c(1,5)]
+
+pdf("./figures/FigureS8.pdf",height = 8,width = 8)
+ggarrange(plotlist = feature_plot_list,ncol = 3,nrow = 3)
+dev.off()
+
+# Figure S18 --------------------------------------------------------------
+load("./results/pbmc3k_clustering_UMAP.RData")
+pbmc <- readRDS("./results/pbmc3k.rds")
+ref <- pbmc@active.ident
+ref[c("CGGGCATGACCCAA-1","CTTGATTGATCTTC-1")] <- "Platelet"
+pbmc <- pbmc[,ref!="Platelet"]
+g2m_genes <- cc.genes$g2m.genes
+g2m_genes <- CaseMatch(search = g2m_genes,match = rownames(pbmc))
+s_genes <- cc.genes$s.genes
+s_genes <- CaseMatch(search = s_genes,match = rownames(pbmc))
+pbmc <- CellCycleScoring(pbmc,g2m.features = g2m_genes,
+                         s.features = s_genes)
+
+data.tmp <- plots.list[[1]]$data
+data.tmp$cluster <- factor(data.tmp$cluster)
+exp.tmp <- pbmc@assays$RNA@data["MAP1LC3B",]
+data.tmp <- cbind.data.frame(data.tmp,exp = exp.tmp)
+p1 <- ggplot(mapping = aes(x=UMAP_1, y=UMAP_2)) + 
+  geom_point(data = data.tmp,
+             aes(color=exp),
+             cex=0.2,shape = 16)+ 
+  scale_color_gradient(low = "grey75",high = "blue")+
+  theme_pubr()+theme(legend.position="none") +
+  labs(title = "MAP1LC3B")
+marker_exp <- data.frame(exp = as.numeric(pbmc@assays$RNA@data["MAP1LC3B",]),
+                         id = pbmc@meta.data$Phase)
+set.seed(321)
+noise <- rnorm(n = nrow(marker_exp)) / 100000
+marker_exp$exp <- marker_exp$exp+noise
+color <- hue_pal()(3)
+p2 <- ggplot(marker_exp, aes(x = factor(id,levels = c("G1","G2M","S")),
+                             y = exp, fill = id)) +
+  geom_violin(scale = "width", adjust = 0.8, trim = T) +
+  scale_y_continuous(expand = c(0, 0), position="left", labels = function(x)
+    c(rep(x = "", times = length(x)-2), x[length(x) - 1], "")) +
+  cowplot::theme_cowplot(font_size = 12) +
+  scale_fill_discrete(type = color)+
+  theme(legend.position = "none", panel.spacing = unit(0, "lines"),
+        panel.background = element_rect(fill = NA, color = "black"),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        strip.text.y.right = element_text(angle = 0),
+        axis.text.x = element_text(angle = 45,hjust = 1),
+        axis.text.y=element_blank(),  #remove y axis labels
+        axis.ticks.y=element_blank()) +
+  ggtitle("MAP1LC3B")+xlab("") + ylab("Expression Level")
+pdf("FigureS18_MAP1LC3B.pdf",width = 6,height = 3)
+ggarrange(p1,p2,nrow = 1,labels = c("A","B"))
+dev.off()
+
+data.tmp <- plots.list[[1]]$data
+data.tmp$cluster <- factor(data.tmp$cluster)
+exp.tmp <- pbmc@assays$RNA@data["HMGB2",]
+data.tmp <- cbind.data.frame(data.tmp,exp = exp.tmp)
+p1 <- ggplot(mapping = aes(x=UMAP_1, y=UMAP_2)) + 
+  geom_point(data = data.tmp,
+             aes(color=exp),
+             cex=0.2,shape = 16)+ 
+  scale_color_gradient(low = "grey75",high = "blue")+
+  theme_pubr()+theme(legend.position="none") +
+  labs(title = "HMGB2")
+marker_exp <- data.frame(exp = as.numeric(pbmc@assays$RNA@data["HMGB2",]),
+                         id = pbmc@meta.data$Phase)
+set.seed(321)
+noise <- rnorm(n = nrow(marker_exp)) / 100000
+marker_exp$exp <- marker_exp$exp+noise
+color <- hue_pal()(3)
+p2 <- ggplot(marker_exp, aes(x = factor(id,levels = c("G1","G2M","S")),
+                             y = exp, fill = id)) +
+  geom_violin(scale = "width", adjust = 0.8, trim = T) +
+  scale_y_continuous(expand = c(0, 0), position="left", labels = function(x)
+    c(rep(x = "", times = length(x)-2), x[length(x) - 1], "")) +
+  cowplot::theme_cowplot(font_size = 12) +
+  scale_fill_discrete(type = color)+
+  theme(legend.position = "none", panel.spacing = unit(0, "lines"),
+        panel.background = element_rect(fill = NA, color = "black"),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        strip.text.y.right = element_text(angle = 0),
+        axis.text.x = element_text(angle = 45,hjust = 1),
+        axis.text.y=element_blank(),  #remove y axis labels
+        axis.ticks.y=element_blank()) +
+  ggtitle("HMGB2")+xlab("") + ylab("Expression Level")
+pdf("FigureS18_HMGB2.pdf",width = 6,height = 3)
+ggarrange(p1,p2,nrow = 1,labels = c("A","B"))
+dev.off()
