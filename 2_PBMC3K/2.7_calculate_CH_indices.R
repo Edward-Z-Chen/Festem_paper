@@ -11,7 +11,7 @@ gene.list <- list(EM[1:1000],hvgvst[1:1000],hvgdisp[1:1000],dub,
                   devianceFS[1:1000],trendvar[1:1000])
 CH.index <- rep(NA,length(gene.list))
 
-for (j in 1:ncol(SI.index)){
+for (j in 1:ncol(CH.index)){
   if (length(gene.list[[j]])>=1000){
     gene.tmp <- gene.list[[j]]
     pbmc <- RunPCA(pbmc, verbose = FALSE,features = gene.tmp)
