@@ -28,6 +28,7 @@ names(label.list) <- c("Festem","HVGvst","HVGdisp","DUBStepR","devianceFS","tren
 names(umap.list) <- c("Festem","HVGvst","HVGdisp","DUBStepR","devianceFS","trendVar")
 plots.list <- vector("list",length(gene.list))
 for (i in 1:length(gene.list)){
+  pbmc <- ScaleData(pbmc,features = gene.list[[i]])
   pbmc <- RunPCA(pbmc, verbose = FALSE,features = gene.list[[i]])
   pbmc <- FindNeighbors(object = pbmc, dims = 1:15)
   pbmc <- FindClusters(object = pbmc, resolution = 1)
