@@ -20,4 +20,4 @@
 
 Besides the packages listed in "1_Simulation", the following R packages are also needed:
 
-plyr==1.8.6, pROC==1.17.0.1.
+plyr==1.8.6, pROC==1.17.0.1, ggsci==2.9, cowplot==1.1.1
