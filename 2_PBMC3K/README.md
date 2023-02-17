@@ -15,3 +15,9 @@
 
 - Download preprocessed data from xxx (recommanded) and place it under the **"results"** folder, OR download the original data from https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz.
 - Download housekeeping gene list from https://housekeeping.unicamp.br/Housekeeping_GenesHuman.RData and place it in **this** folder.
+
+## Dependency
+
+Besides the packages listed in "1_Simulation", the following R packages are also needed:
+
+plyr==1.8.6, pROC==1.17.0.1.
