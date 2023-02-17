@@ -408,3 +408,63 @@ for (i in 1:6){
 pdf("./figures/FigureS6_topleft.pdf",width = 6,height = 4)
 ggrocs(pROC_list)
 dev.off()
+
+# Figure S7A --------------------------------------------------------------
+pbmc <- readRDS("./results/pbmc3k.rds")
+ref <- pbmc@active.ident
+ref[c("CGGGCATGACCCAA-1","CTTGATTGATCTTC-1")] <- "Platelet"
+pbmc <- pbmc[,ref!="Platelet"]
+load("./results/pbmc3k_clustering_UMAP.RData")
+marker_list <- c("IL7R","CCR7","CD27","SELL","TCF7","CD3E",
+                 "CD14", "LYZ",
+                 "CD79A","CD37","MS4A1",
+                 "GZMK","CD8A","CD8B",
+                 "FCGR3A","MS4A7",
+                 "NKG7", "GNLY", "CD247","GZMB",
+                 "FCER1A", "CST3","CD1C"
+                 )
+label.tmp <- label.list[[1]]
+levels(label.tmp) <- rank(-summary(label.tmp),ties.method = "first")
+levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),1:10,c("Memory CD4 T","Naive CD4 T","CD14+ Monocyte",
+                                                              "B","CD8 T","FCGR3A+ Monocyte","NK","M-MDSC-like",
+                                                              "CD27-CD4+\n Memory T","DC"))
+label.tmp <- factor(label.tmp,levels = rev(levels(label.tmp)))
+pbmc@active.ident <- label.tmp
+pdf("./figures/FigureS7A.pdf",width = 10,height = 6)
+DotPlot(pbmc, features = marker_list, cols = c("blue", "red"), 
+        dot.scale = 8,idents = levels(label.tmp)[c(-2,-3)]) + RotatedAxis()
+dev.off()
+
+# Figure S7B --------------------------------------------------------------
+load("./results/pbmc3k_resolution_ARI.RData")
+label_ARI_frame <- data.frame()
+for (i in 1:nrow(label_ARI)){
+  label_ARI_frame <- rbind.data.frame(label_ARI_frame,
+                                      data.frame(ARI = label_ARI[i,],
+                                                 reso = 0.1*(1:15),
+                                                 method = rep(rownames(label_ARI)[i],15)))
+}
+label_ARI_frame$reso <- factor(label_ARI_frame$reso)
+label_ARI_frame$method <- factor(label_ARI_frame$method)
+label_ARI_frame$ARI <- round(label_ARI_frame$ARI,2)
+pdf("./figures/FigureS7B.pdf",width = 10,height = 4)
+ggplot(data = label_ARI_frame,aes(x = reso,y = method,fill = ARI))+
+  geom_tile(color = "white",
+            lwd = 1,
+            linetype = 1)+theme_pubr()+
+  scale_y_discrete(limits = c(rownames(label_ARI[-1,])[order(label_ARI[-1,10],decreasing = F)],"Festem"))+
+  geom_text(aes(x = reso,y = method,label = ARI),color = "black",size = 5,fontface = "bold")+
+  scale_fill_gradient2(low = "white",mid = "#FCD2D1",high = "#FF5C58",midpoint = 0.7) + 
+  theme(axis.text.x = element_text(angle = -30),plot.title = element_text(hjust = 0.5),
+        panel.border = element_blank()) +
+  guides(fill = guide_legend(reverse = F))+
+  labs(fill = "Percent",y = NULL,x = "resolution")+
+  theme(legend.position = "right")+
+  guides(fill = guide_colourbar(label = T,
+                                ticks = T,
+                                title = NULL))
+dev.off()
+
+# Figure S8 ---------------------------------------------------------------
+
+
