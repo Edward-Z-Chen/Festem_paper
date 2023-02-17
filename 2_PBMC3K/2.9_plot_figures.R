@@ -11,7 +11,9 @@ umap.for.plot <- function(umap,cluster){
   umap <- as.data.frame(umap)
   cbind(umap,cluster = cluster)
 }
-
+if (!file.exists("./figures")){
+  dir.create("./figures")
+}
 # Figure 3 (A) -- left top and Figure S5 top ------------------------------------------------
 ## Summarising results from various DEG detection methods
 results <- matrix(nrow = nrow(pbmc),ncol = 19,
@@ -127,7 +129,6 @@ double_exp <- function() {
   return(trans_new("double_exp", trans, inv))
 }
 
-# Supplementary figure
 my_color <- c(rep("#DE2D26",4),rep("#1F78B4",2),rep("#33A02C",2),"#FF7F00","#6A3D9A",
               "#FF7F00","#6A3D9A","#FF99D7",rep("#B15928",4),"grey50")
 names(my_color) <- c("Festem","Festem_gamma0.01","Festem_7g","Festem_10g",
@@ -138,6 +139,7 @@ names(my_color) <- c("Festem","Festem_gamma0.01","Festem_7g","Festem_10g",
 my_shape <- c(16,15,17,18,16,7,16,7,16,16,9,9,16,10,16,12,13,16)
 names(my_shape) <- names(my_color)
 
+pdf("./figures/FigureS5_pbmc3k_left.pdf",height = 6,width = 6)
 ggplot(data = power_frame2,mapping = aes(x = recall, y = precision))+
   geom_point(aes(color = method, shape = method),
              size = 4,stroke = 1)+
@@ -158,6 +160,7 @@ ggplot(data = power_frame2,mapping = aes(x = recall, y = precision))+
   theme(legend.position = "bottom",
         axis.text.x = element_text(angle = 0))+
   guides(color = guide_legend(nrow = 4))
+dev.off()
 
 ## Figure S5 top right -----------------------------------------------------------
 num_reject <- apply(p_values_full,2,function(x){sum(x<0.05,na.rm = T)})
@@ -165,6 +168,8 @@ num_reject <- data.frame(method = colnames(p_values_full),
                          num = num_reject)
 num_reject <- num_reject[order(num_reject$num,decreasing = F),]
 num_reject$method <- factor(num_reject$method,levels = num_reject$method)
+
+pdf("./figures/FigureS5_pbmc3k_right.pdf",height = 8,width = 8)
 ggplot(num_reject,aes(x = method,y = num,fill = method))+
   geom_bar(stat = "identity")+
   theme_pubr()+
@@ -173,8 +178,9 @@ ggplot(num_reject,aes(x = method,y = num,fill = method))+
   theme(legend.position = "bottom",
         axis.text.x = element_text(angle = 90))+
   guides(color = guide_legend(nrow = 4))
+dev.off()
 
-## Figure 3 (A) -- left top ------------------------------------------------
+## Figure 3 (A) -- top left ------------------------------------------------
 power_frame2 <- power_frame2[c(1,5,7,9,10,14,17,18),]
 power_frame2[c(1,6),1] <- c("Festem","singleCellHaystack")
 my_color <- my_color[c(1,5,7,9,10,13,15,18)]
@@ -182,6 +188,7 @@ names(my_color)[7] <- "singleCellHaystack"
 my_shape <- c(16,15,17,18,7,8,9,10)
 names(my_shape) <- names(my_color)
 
+pdf("./figures/Figure3A_topleft.pdf",height = 4,width = 3.5)
 ggplot(data = power_frame2,mapping = aes(x = recall, y = precision))+
   geom_point(aes(color = method, shape = method),
              size = 4,stroke = 1)+
@@ -202,12 +209,15 @@ ggplot(data = power_frame2,mapping = aes(x = recall, y = precision))+
   theme(legend.position = "bottom",
         axis.text.x = element_text(angle = 0))+
   guides(color = guide_legend(nrow = 2))
+dev.off()
 
 num_reject <- num_reject[num_reject$method %in% c(power_frame2$method,"singleCellHaystack-UMAP"),]
 num_reject$method <- factor(num_reject$method)
 levels(num_reject$method) <- plyr::mapvalues(levels(num_reject$method),
                                              c("singleCellHaystack-UMAP"),
                                              c("singleCellHaystack"))
+
+pdf("./figures/Figure3A_topleft_inset.pdf",height = 4,width = 4)
 ggplot(num_reject,aes(x = method,y = num,fill = method))+
   geom_bar(stat = "identity",width = 1)+
   theme_pubr()+
@@ -219,4 +229,182 @@ ggplot(num_reject,aes(x = method,y = num,fill = method))+
         axis.ticks.x=element_blank())+
   guides(color = guide_legend(nrow = 1))+
   labs(x = NULL,y = "Number")
+dev.off()
 
+# Figure S1 ---------------------------------------------------------------
+pbmc <- readRDS("./results/pbmc3k.rds")
+ref <- pbmc@active.ident
+ref[c("CGGGCATGACCCAA-1","CTTGATTGATCTTC-1")] <- "Platelet"
+pbmc <- pbmc[,ref!="Platelet"]
+load("./results/pbmc3k_hvggenes.RData")
+load("./results/pbmc3k_DEG_results.RData")
+EM <- rownames(results)[results[,1]<=0.05]
+EM <- EM[!is.na(EM)]
+tmp <- hvgvst %in% EM
+load("Housekeeping_GenesHuman.RData")
+tmp <- !tmp & (hvgvst %in% Housekeeping_Genes$Gene.name)
+
+## Figure S1 (A) ---------------------------------------------------------------
+load("./results/pbmc3k_clustering_UMAP.RData")
+marker_list <- hvgvst[which(tmp)[1:10]]
+feature_plot_list <- vector("list",length = length(marker_list))
+
+for (i in 1:length(marker_list)){
+  data.tmp <- plots.list[[1]]$data
+  data.tmp$cluster <- factor(data.tmp$cluster)
+  exp.tmp <- pbmc@assays$RNA@data[marker_list[i],]
+  data.tmp <- cbind.data.frame(data.tmp,exp = exp.tmp)
+  feature_plot_list[[i]] <- 
+    ggplot(mapping = aes(x=UMAP_1, y=UMAP_2)) + 
+    geom_point(data = data.tmp,
+               aes(color=exp),
+               cex=0.5,shape = 16)+ 
+    scale_color_gradient(low = "grey75",high = "blue")+
+    theme_pubr()+theme(legend.position="none") +
+    labs(title = marker_list[i])
+}
+pdf("./figures/FigureS1A.pdf",width = 16,height = 8)
+ggarrange(plotlist = feature_plot_list,ncol = 5,nrow = 2,legend = "none")
+dev.off()
+
+## Figure S1 (B) ---------------------------------------------------------------
+EM <- rownames(results)[results[,1]<=0.05]
+EM <- EM[!is.na(EM)]
+tmp <- EM %in% hvgvst
+tmp <- !tmp & (!EM %in% Housekeeping_Genes$Gene.name)
+
+marker_list <- c("GZMM","BLVRB","CSF3R","CD8A","NUP214","TSPO",
+                 "IL2RB","ITGB2","RNF130","CSF1R")
+feature_plot_list <- vector("list",length = length(marker_list))
+for (i in 1:length(marker_list)){
+  data.tmp <- plots.list[[1]]$data
+  data.tmp$cluster <- factor(data.tmp$cluster)
+  exp.tmp <- pbmc@assays$RNA@data[marker_list[i],]
+  data.tmp <- cbind.data.frame(data.tmp,exp = exp.tmp)
+  feature_plot_list[[i]] <- 
+    ggplot(mapping = aes(x=UMAP_1, y=UMAP_2)) + 
+    geom_point(data = data.tmp,
+               aes(color=exp),
+               cex=0.5,shape = 16)+ 
+    scale_color_gradient(low = "grey75",high = "blue")+
+    theme_pubr()+theme(legend.position="none") +
+    labs(title = marker_list[i])
+}
+pdf("./figures/FigureS1B.pdf",width = 16,height = 8)
+ggarrange(plotlist = feature_plot_list,ncol = 5,nrow = 2,legend = "none")
+dev.off()
+
+# Figure S4A --------------------------------------------------------------
+marker_list <- c("AURKAIP1","CYC1","NAP1L4","SF3B5","RPN1","MRPL54")
+feature_plot_list <- vector("list",length = length(marker_list))
+
+for (i in 1:length(marker_list)){
+  data.tmp <- plots.list[[1]]$data
+  data.tmp$cluster <- factor(data.tmp$cluster)
+  exp.tmp <- pbmc@assays$RNA@data[marker_list[i],]
+  data.tmp <- cbind.data.frame(data.tmp,exp = exp.tmp)
+  feature_plot_list[[i]] <- 
+    ggplot(mapping = aes(x=UMAP_1, y=UMAP_2)) + 
+    geom_point(data = data.tmp,
+               aes(color=exp),
+               cex=0.5,shape = 16)+ 
+    scale_color_gradient(low = "grey75",high = "blue")+
+    theme_pubr()+theme(legend.position="none") +
+    labs(title = marker_list[i])
+}
+pdf("./figures/FigureS4A.pdf",width = 8,height = 6)
+ggarrange(plotlist = feature_plot_list,ncol = 3,nrow = 2,legend = "none")
+dev.off()
+
+# Figure S6 -- top left ---------------------------------------------------
+load("./results/pbmc3k_hvggenes.RData")
+pbmc <- readRDS("./results/pbmc3k.rds")
+pbmc <- FindVariableFeatures(pbmc,nfeatures = nrow(pbmc))
+hvgvst <- VariableFeatures(pbmc)
+pbmc <- FindVariableFeatures(pbmc,nfeatures = nrow(pbmc),selection.method = "disp")
+hvgdisp <- VariableFeatures(pbmc)
+
+load("./results/pbmc3k_silver_standard.RData")
+g1 <- rownames(moran_h)[abs(moran_h[,1])<0.02 & moran_h[,2]>0.05]
+moran_nonh <- moran_nonh[!is.na(moran_nonh[,1]),]
+g2 <- rownames(moran_nonh)[moran_nonh[,1]>0.1]
+g2 <- g2[gene_percent[g2]>0.05]
+load("./results/pbmc3k_clustering_UMAP.RData")
+## ROC curve (codes modified from https://gist.github.com/charly06/91578196fc615c5a79c7174318be4349#file-ggrocs-r)
+#' Functions plots multiple 'roc' objects into one plot
+#' @param rocs
+#'   A list of 'roc' objects. Every list item has a name.
+#' @param breaks
+#'   A vector of integers representing ticks on the x- and y-axis
+#' @param legentTitel
+#'   A string which is used as legend titel
+ggrocs <- function(rocs, breaks = seq(0,1,0.1), legendTitel = "Legend") {
+  if (length(rocs) == 0) {
+    stop("No ROC objects available in param rocs.")
+  } else {
+    require(plyr)
+    # Store all sensitivities and specifivities in a data frame
+    # which an be used in ggplot
+    RocVals <- plyr::ldply(names(rocs), function(rocName) {
+      if(class(rocs[[rocName]]) != "roc") {
+        stop("Please provide roc object from pROC package")
+      }
+      data.frame(
+        fpr = rev(1-rocs[[rocName]]$specificities),
+        tpr = rev(rocs[[rocName]]$sensitivities),
+        names = rep(rocName, length(rocs[[rocName]]$sensitivities)),
+        stringAsFactors = T
+      )
+    })
+    
+    my.color <- c("#DE2D26","#6A3D9A","#9BA3EB","#4DAF4A","#FF7F00","#C0B236")
+    names(my.color) <- c("Festem","HVGvst","HVGdisp","DUBStepR","devianceFS","trendVar")
+    # aucAvg <- mean(sapply(rocs, "[[", "auc"))
+    auc_tmp <- sapply(rocs, "[[", "auc")
+    
+    rocPlot <- ggplot(RocVals, aes(x = fpr, y = tpr, colour = names)) +
+      # geom_segment(aes(x = 0, y = 1, xend = 1,yend = 0), alpha = 0.5, colour = "gray") + 
+      geom_step() +
+      scale_x_continuous(name = "False Positive Rate (1 - Specificity)",limits = c(0,1), breaks = breaks) + 
+      scale_y_continuous(name = "True Positive Rate (Sensitivity)", limits = c(0,1), breaks = breaks) +
+      theme_pubr() + 
+      coord_equal() + 
+      #annotate("text", x = 0.1, y = 0.1, vjust = 0, label = paste("AUC =",sprintf("%.3f",aucAvg))) +
+      guides(colour = guide_legend(legendTitel)) +
+      theme(axis.ticks = element_line(color = "black"),legend.position = "right")+
+      scale_color_manual(values = my.color,
+                         labels = paste0(names(my.color)," (AUC = ",round(auc_tmp,3),")"))
+    
+    rocPlot
+  }
+}
+
+library(pROC)
+pROC_list <- vector("list",6)
+set.seed(321)
+gene.list <- list(Festem = c(EM,setdiff(rownames(pbmc),EM)[sample(1:(nrow(pbmc)-length(EM)),nrow(pbmc)-length(EM))]),
+                  HVGvst = c(hvgvst,setdiff(rownames(pbmc),hvgvst)[sample(1:(nrow(pbmc)-length(hvgvst)),nrow(pbmc)-length(hvgvst))]),
+                  HVGdisp = c(hvgdisp,setdiff(rownames(pbmc),hvgdisp)[sample(1:(nrow(pbmc)-length(hvgdisp)),nrow(pbmc)-length(hvgdisp))]),
+                  DUBStepR = c(dub,setdiff(rownames(pbmc),dub)[sample(1:(nrow(pbmc)-length(dub)),nrow(pbmc)-length(dub))]),
+                  devianceFS = c(devianceFS,setdiff(rownames(pbmc),devianceFS)[sample(1:(nrow(pbmc)-length(devianceFS)),nrow(pbmc)-length(devianceFS))]),
+                  trendVar = c(trendvar,setdiff(rownames(pbmc),trendvar)[sample(1:(nrow(pbmc)-length(trendvar)),nrow(pbmc)-length(trendvar))]))
+names(pROC_list) <- names(gene.list)
+for (i in 1:6){
+  pROC_list[[i]] <- roc(c(rep(0,length(g1)),rep(1,length(g2))),
+                        # as.numeric(c(g2,g4) %in% gene.list[[i]]),
+                        apply(cbind(c(g1,g2)),1,function(x){
+                          if (x %in% gene.list[[i]]){
+                            which(x==gene.list[[i]])
+                          }else{
+                            length(gene.list[[i]])+1
+                          }
+                        }),
+                        direction = ">",
+                        smoothed = TRUE,
+                        # arguments for plot
+                        plot=FALSE, auc.polygon=FALSE, max.auc.polygon=FALSE, grid=TRUE,
+                        print.auc=TRUE, show.thres=TRUE)
+}
+pdf("./figures/FigureS6_topleft.pdf",width = 6,height = 4)
+ggrocs(pROC_list)
+dev.off()
