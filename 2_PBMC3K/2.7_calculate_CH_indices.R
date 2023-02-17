@@ -14,6 +14,7 @@ CH.index <- rep(NA,length(gene.list))
 for (j in 1:length(CH.index)){
   if (length(gene.list[[j]])>=1000){
     gene.tmp <- gene.list[[j]]
+    pbmc <- ScaleData(pbmc,features = gene.tmp)
     pbmc <- RunPCA(pbmc, verbose = FALSE,features = gene.tmp)
     pbmc <- FindNeighbors(object = pbmc, dims = 1:15)
     pbmc <- FindClusters(object = pbmc, resolution = 1)
