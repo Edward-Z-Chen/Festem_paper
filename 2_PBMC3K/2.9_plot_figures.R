@@ -347,7 +347,7 @@ ggarrange(plotlist = plots.list,
 dev.off()
 
 
-# Figure 4B ---------------------------------------------------------------
+## Figure 4B ---------------------------------------------------------------
 library(cowplot)
 pbmc <- readRDS("./results/pbmc3k.rds")
 ref <- pbmc@active.ident
@@ -396,7 +396,7 @@ ggplot(marker_exp, aes(x = factor(id,levels = c("Festem","devianceFS","trendVar"
 dev.off()
 
 
-# Figure 4C & D ---------------------------------------------------------------
+## Figure 4C & D ---------------------------------------------------------------
 library(ggalluvial)
 library(tidyverse)
 library(scales)
