@@ -231,6 +231,256 @@ ggplot(num_reject,aes(x = method,y = num,fill = method))+
   labs(x = NULL,y = "Number")
 dev.off()
 
+
+# Figure 4 ----------------------------------------------------------------
+load("./results/pbmc3k_clustering_UMAP.RData")
+## Figure 4A --left ----------------------------------------------------------------
+label.tmp <- label.list[[1]]
+levels(label.tmp) <- rank(-summary(label.tmp),ties.method = "first")
+umap.tmp <- umap.for.plot(umap.list[[1]],label.tmp)
+
+class_avg <- umap.tmp %>%
+  group_by(cluster) %>%
+  summarise(
+    UMAP_1 = median(UMAP_1),
+    UMAP_2 = median(UMAP_2)
+  )
+class_avg <- cbind(class_avg,class_avg[,1])
+colnames(class_avg)[4] <- "cluster.anno"
+class_avg[,4] <- plyr::mapvalues(class_avg[,4],1:10,c("Memory CD4 T","Naive CD4 T","CD14+ Monocyte",
+                                                      "B","CD8 T","FCGR3A+ Monocyte","NK","M-MDSC-like",
+                                                      "CD27-CD4+\n Memory T","DC"))
+pdf("./figures/Figure4A_left.pdf",width = 4,height = 4)
+ggplot(umap.tmp, aes(x=UMAP_1, y=UMAP_2, color=cluster)) + 
+  geom_point(cex=0.1) + theme_pubr()+
+  theme(legend.position="none",text = element_text(size = 15)) +
+  # ggrepel::geom_label_repel(data = class_avg,aes(x=UMAP_1,y = UMAP_2,label = cluster.anno),label.padding = unit(0.1,'cm'),label.size = 0.15)+
+  geom_text(aes(x=UMAP_1,y = UMAP_2,label = cluster.anno), data = class_avg,inherit.aes = F, color = "black",fontface = "bold",size = 3)+
+  labs(title = names(label.list)[1])+scale_color_manual(values = my.color,name = "Clusters")
+dev.off()
+
+## Competing methods ----------------------------------------------------------------
+for (i in 1:length(label.list)){
+  label.tmp <- label.list[[i]]
+  levels(label.tmp) <- rank(-summary(label.tmp),ties.method = "first")
+  if (i == 2) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),3:9,c(4,5,8,6,3,7,10))
+  }
+  if (i == 3) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),2:8,c(3,2,4,5,6,7,10))
+  }
+  if (i == 4) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),5:9,c(9,7,6,5,10))
+  }
+  if (i == 5) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),3:9,c(4,8,5,3,9,7,6))
+  }
+  if (i == 6) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),2:12,c(3,4,2,6,9,7,5,11,12,10,13))
+  }
+  umap.tmp <- umap.for.plot(umap.list[[i]],label.tmp)
+  
+  class_avg <- umap.tmp %>%
+    group_by(cluster) %>%
+    summarise(
+      UMAP_1 = median(UMAP_1),
+      UMAP_2 = median(UMAP_2)
+    )
+  plots.list[[i]] <- ggplot(umap.tmp, aes(x=UMAP_1, y=UMAP_2, color=cluster)) + 
+    geom_point(cex=0.1) + theme_pubr()+theme(legend.position="none",text = element_text(size = 15)) +
+    # ggrepel::geom_label_repel(data = class_avg,aes(x=UMAP_1,y = UMAP_2,label = allgenes),label.padding = unit(0.1,'cm'))
+    geom_text(aes(x=UMAP_1,y = UMAP_2,label = cluster), data = class_avg,inherit.aes = F, color = "black",fontface = "bold",size = 4)+
+    labs(title = names(label.list)[i])+scale_color_manual(values = my.color,name = "Clusters")
+}
+pdf("./figures/umaps.pdf",height = 6,width = 10)
+ggarrange(plotlist = plots.list,nrow = 2,ncol = 3,legend = "none")
+dev.off()
+
+## Figure 4A --right ----------------------------------------------------------------
+for (i in 1:length(label.list)){
+  label.tmp <- label.list[[i]]
+  levels(label.tmp) <- rank(-summary(label.tmp),ties.method = "first")
+  if (i == 2) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),3:9,c(4,5,8,6,3,7,10))
+  }
+  if (i == 3) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),2:8,c(3,2,4,5,6,7,10))
+  }
+  if (i == 4) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),5:9,c(9,7,6,5,10))
+  }
+  if (i == 5) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),3:9,c(4,8,5,3,9,7,6))
+  }
+  if (i == 6) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),2:12,c(3,4,2,6,9,7,5,11,12,10,13))
+  }
+  umap.tmp <- umap.for.plot(umap.list[[1]],label.tmp)
+  
+  class_avg <- umap.tmp %>%
+    group_by(cluster) %>%
+    summarise(
+      UMAP_1 = median(UMAP_1),
+      UMAP_2 = median(UMAP_2)
+    )
+  umap.tmp <- filter(umap.tmp, UMAP_1<0 & UMAP_2>-5)
+  umap.tmp$cluster <- factor(umap.tmp$cluster)
+  class_avg <- class_avg[class_avg$cluster %in% levels(umap.tmp$cluster),]
+  plots.list[[i]] <- ggplot(umap.tmp, aes(x=UMAP_1, y=UMAP_2, color=cluster)) + 
+    geom_point(cex=0.1) + theme_pubr()+theme(legend.position="none",text = element_text(size = 15)) +
+    # ggrepel::geom_label_repel(data = class_avg,aes(x=UMAP_1,y = UMAP_2,label = allgenes),label.padding = unit(0.1,'cm'))
+    geom_text(aes(x=UMAP_1,y = UMAP_2,label = cluster), data = class_avg,inherit.aes = F, color = "black",fontface = "bold",size = 4)+
+    labs(title = names(label.list)[i])+
+    scale_x_continuous(limits = c(-10,-3))+
+    scale_y_continuous(limits = c(-5,8))
+  if (i %in% c(2,3)){
+    plots.list[[i]] <- plots.list[[i]]+scale_color_manual(values = my.color[c(5)],name = "Clusters")
+  } else{
+    plots.list[[i]] <- plots.list[[i]]+scale_color_manual(values = my.color[c(9)],name = "Clusters")
+  }
+}
+pdf("./figures/Figure4A_right.pdf",width = 5,height = 4)
+ggarrange(plotlist = plots.list,
+          nrow = 2,ncol = 3,legend = "none")
+dev.off()
+
+
+# Figure 4B ---------------------------------------------------------------
+library(cowplot)
+pbmc <- readRDS("./results/pbmc3k.rds")
+ref <- pbmc@active.ident
+ref[c("CGGGCATGACCCAA-1","CTTGATTGATCTTC-1")] <- "Platelet"
+pbmc <- pbmc[,ref!="Platelet"]
+load("./results/pbmc3k_clustering_UMAP.RData")
+marker_list <- c("CD27","SELL","CCR7","MAL","LEF1","CCL5",
+                 "CST7","NKG7","S100A11","IL7R","S100A4")
+marker_exp <- data.frame(exp = as.numeric(pbmc@assays$RNA@data[marker_list,plots.list[[1]]$data$cluster=="8"]),
+                         gene = rep(marker_list,sum(plots.list[[1]]$data$cluster=="8")),
+                         id = "Festem")
+marker_exp <- rbind(marker_exp,data.frame(exp = as.numeric(pbmc@assays$RNA@data[marker_list,plots.list[[5]]$data$cluster=="6"]),
+                                          gene = rep(marker_list,sum(plots.list[[5]]$data$cluster=="6")),
+                                          id = "devianceFS"))
+marker_exp <- rbind(marker_exp,data.frame(exp = as.numeric(pbmc@assays$RNA@data[marker_list,plots.list[[6]]$data$cluster=="5"]),
+                                          gene = rep(marker_list,sum(plots.list[[6]]$data$cluster=="5")),
+                                          id = "trendVar"))
+marker_exp <- rbind(marker_exp,data.frame(exp = as.numeric(pbmc@assays$RNA@data[marker_list,plots.list[[4]]$data$cluster=="4"]),
+                                          gene = rep(marker_list,sum(plots.list[[4]]$data$cluster=="4")),
+                                          id = "DUBStepR"))
+set.seed(321)
+noise <- rnorm(n = nrow(marker_exp)) / 100000
+marker_exp$exp <- marker_exp$exp+noise
+marker_exp$gene <- factor(marker_exp$gene,levels = marker_list)
+my.color <- c("#DE2D26","#4DAF4A","#FF7F00","#C0B236")
+names(my.color) <- c("Festem","DUBStepR","devianceFS","trendVar")
+
+pdf("./figures/Figure4B.pdf",height = 5.5,width = 4)
+ggplot(marker_exp, aes(x = factor(id,levels = c("Festem","devianceFS","trendVar","DUBStepR")),
+                       y = exp, fill = id)) +
+  geom_violin(scale = "width", adjust = 1, trim = T) +
+  scale_y_continuous(expand = c(0, 0), position="left", labels = function(x)
+    c(rep(x = "", times = length(x)-2), x[length(x) - 1], "")) +
+  facet_grid(rows = vars(gene), scales = "free") +
+  theme_cowplot(font_size = 12) +
+  scale_fill_discrete(type = my.color)+
+  theme(legend.position = "none", panel.spacing = unit(0, "lines"),
+        panel.background = element_rect(fill = NA, color = "black"),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        strip.text.y.right = element_text(angle = 0),
+        axis.text.x = element_text(angle = 45,hjust = 1),
+        axis.text.y=element_blank(),  #remove y axis labels
+        axis.ticks.y=element_blank()) +
+  ggtitle("CD27-CD4+ Memory T (Cluster 9)")+xlab("") + ylab("Expression Level")
+dev.off()
+
+
+# Figure 4C & D ---------------------------------------------------------------
+library(ggalluvial)
+library(tidyverse)
+library(scales)
+my.color <- hue_pal()(13)
+names(my.color) <- 1:13
+names(my.color) <- plyr::mapvalues(names(my.color),1:10,c("Memory CD4 T","Naive CD4 T","CD14+ Monocyte",
+                                                          "B","CD8 T","FCGR3A+ Monocyte","NK","M-MDSC-like",
+                                                          "CD27-CD4+\n Memory T","DC"))
+load("./results/pbmc3k_clustering_UMAP.RData")
+for (i in 1:length(label.list)){
+  label.tmp <- label.list[[i]]
+  levels(label.tmp) <- rank(-summary(label.tmp),ties.method = "first")
+  if (i == 2) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),3:9,c(4,5,8,6,3,7,10))
+  }
+  if (i == 3) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),2:8,c(3,2,4,5,6,7,10))
+  }
+  if (i == 4) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),5:9,c(9,7,6,5,10))
+  }
+  if (i == 5) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),3:9,c(4,8,5,3,9,7,6))
+  }
+  if (i == 6) {
+    levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),2:12,c(3,4,2,6,9,7,5,11,12,10,13))
+  }
+  umap.tmp <- umap.for.plot(umap.list[[i]],label.tmp)
+  
+  class_avg <- umap.tmp %>%
+    group_by(cluster) %>%
+    summarise(
+      UMAP_1 = median(UMAP_1),
+      UMAP_2 = median(UMAP_2)
+    )
+  plots.list[[i]] <- ggplot(umap.tmp, aes(x=UMAP_1, y=UMAP_2, color=cluster)) + 
+    geom_point(cex=0.1) + theme_pubr()+theme(legend.position="none",text = element_text(size = 15)) +
+    # ggrepel::geom_label_repel(data = class_avg,aes(x=UMAP_1,y = UMAP_2,label = allgenes),label.padding = unit(0.1,'cm'))
+    geom_text(aes(x=UMAP_1,y = UMAP_2,label = cluster), data = class_avg,inherit.aes = F, color = "black",fontface = "bold",size = 4)+
+    labs(title = names(label.list)[i])+scale_color_manual(values = my.color,name = "Clusters")
+}
+
+label_data <- rownames(plots.list[[1]]$data)
+label_data <- data.frame(label_data)
+for (i in 1:length(label.list)){
+  label_data <- cbind.data.frame(label_data,plots.list[[i]]$data$cluster)
+}
+label_data <- cbind.data.frame(label_data,1)
+colnames(label_data) <- c("cell",names(label.list),"freq")
+for (i in 2:(ncol(label_data)-1)){
+  levels(label_data[,i]) <- plyr::mapvalues(levels(label_data[,i]),1:10,c("Memory CD4 T","Naive CD4 T","CD14+ Monocyte",
+                                                                          "B","CD8 T","FCGR3A+ Monocyte","NK","M-MDSC-like",
+                                                                          "CD27-CD4+\n Memory T","DC"))
+}
+
+pdf("./figures/Figure4C.pdf",height = 5,width = 4)
+ggplot(data = label_data,
+       aes(axis2 = devianceFS, axis1 = Festem, 
+           y = freq)) +
+  geom_alluvium(aes(fill = Festem)) +
+  geom_stratum() +
+  geom_text(stat = "stratum",
+            aes(label = after_stat(stratum))) +
+  scale_x_discrete(limits = c("Festem", "devianceFS"),
+                   expand = c(0.15, 0.05)) +
+  # ggfittext::geom_fit_text(stat = "stratum") +
+  theme_void()+theme(legend.position = "none")+
+  scale_fill_manual(values = my.color)
+dev.off()
+
+pdf("./figures/Figure4D.pdf",height = 5,width = 4)
+ggplot(data = label_data,
+       aes(axis2 = HVGvst, axis1 = Festem, 
+           y = freq)) +
+  geom_alluvium(aes(fill = Festem)) +
+  geom_stratum() +
+  geom_text(stat = "stratum",
+            aes(label = after_stat(stratum))) +
+  scale_x_discrete(limits = c("Festem", "HVGvst"),
+                   expand = c(0.15, 0.05)) +
+  # ggfittext::geom_fit_text(stat = "stratum") +
+  theme_void()+theme(legend.position = "none")+
+  scale_fill_manual(values = my.color)
+dev.off()
+
+
 # Figure S1 ---------------------------------------------------------------
 pbmc <- readRDS("./results/pbmc3k.rds")
 ref <- pbmc@active.ident
@@ -409,7 +659,8 @@ pdf("./figures/FigureS6_topleft.pdf",width = 6,height = 4)
 ggrocs(pROC_list)
 dev.off()
 
-# Figure S7A --------------------------------------------------------------
+# Figure S7 --------------------------------------------------------------
+## Figure S7A --------------------------------------------------------------
 pbmc <- readRDS("./results/pbmc3k.rds")
 ref <- pbmc@active.ident
 ref[c("CGGGCATGACCCAA-1","CTTGATTGATCTTC-1")] <- "Platelet"
@@ -435,7 +686,7 @@ DotPlot(pbmc, features = marker_list, cols = c("blue", "red"),
         dot.scale = 8,idents = levels(label.tmp)[c(-2,-3)]) + RotatedAxis()
 dev.off()
 
-# Figure S7B --------------------------------------------------------------
+## Figure S7B --------------------------------------------------------------
 load("./results/pbmc3k_resolution_ARI.RData")
 label_ARI_frame <- data.frame()
 for (i in 1:nrow(label_ARI)){
