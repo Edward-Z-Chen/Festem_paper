@@ -49,3 +49,25 @@ for (i in 1:length(gene.list)){
 }
 
 save(gene.list,label.list,umap.list,plots.list,file = "./results/pbmc3k_clustering_UMAP.RData")
+
+
+# Different resolution ----------------------------------------------------
+ref_label <- label.list[[1]]
+label.list <- vector("list",length(gene.list))
+names(label.list) <- c("Festem","HVGvst","HVGDisp","DUBStepR","devianceFS","trendVar")
+label_ARI <- matrix(nrow = length(gene.list),ncol = 15)
+total_num <- matrix(nrow = length(gene.list),ncol = 15)
+rownames(label_ARI) <- names(label.list)
+for (i in 1:length(gene.list)){
+  label.list[[i]] <- matrix(nrow = 15, ncol = ncol(pbmc))
+  pbmc <- ScaleData(pbmc,features = gene.list[[i]])
+  pbmc <- RunPCA(pbmc, verbose = FALSE,features = gene.list[[i]])
+  pbmc <- FindNeighbors(object = pbmc, dims = 1:15)
+  for (j in 1:15){
+    pbmc <- FindClusters(object = pbmc, resolution = 0.1*j)
+    label.list[[i]][j,] <- pbmc@active.ident
+    label_ARI[i,j] <- mclust::adjustedRandIndex(pbmc@active.ident,ref_label)
+    total_num[i,j] <- nlevels(pbmc@active.ident)
+  }
+}
+save(label.list,label_ARI,total_num,file = "./results/pbmc3k_resolution_ARI.RData")
