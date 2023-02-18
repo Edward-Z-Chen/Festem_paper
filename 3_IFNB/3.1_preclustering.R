@@ -1,6 +1,7 @@
 # Download preprocessed data -----------------------------------------------------------
 library(Seurat)
 library(SeuratData)
+InstallData("ifnb")
 data("ifnb")
 ifnb <- subset(ifnb,subset = orig.ident=="IMMUNE_CTRL")
 saveRDS(ifnb,file = "./results/ifnb_ctrl.rds")
