@@ -17,3 +17,6 @@ rm(list = ls())
 
 source("./DEG_methods/ifnb_singleCellHaystack.R")
 rm(list = ls())
+
+source("./DEG_methods/ifnb_ROSeq.R")
+rm(list = ls())
