@@ -7,7 +7,6 @@ https://github.com/jessemzhang/tn_test/blob/master/tntest_tutorial.ipynb
 
 @author: Edward Chen
 """
-import os
 import time
 import pickle
 import itertools
@@ -15,12 +14,9 @@ import itertools
 import numpy as np
 import pandas as pd
 import scanpy as sc
-import matplotlib.pyplot as plt
 from truncated_normal import truncated_normal as tn
 from scipy.stats import ttest_ind
 from pyreadr import read_r
-import igraph as ig
-import louvain
 
 # Load data
 adata = read_r("./results/pbmc3k_counts_forpython.RData")
