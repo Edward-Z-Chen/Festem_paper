@@ -12,7 +12,7 @@ tsne.for.plot <- function(tsne,cluster){
   cbind(tsne,cluster = cluster)
 }
 load("./results/ifnb_ctrl_hvggenes.RData")
-ifnb <- readRDS("./results/ifnb3k.rds")
+ifnb <- readRDS("./results/ifnb_ctrl.rds")
 ifnb <- NormalizeData(ifnb)
 ifnb <- ifnb[,!ifnb@meta.data$seurat_annotations%in%c("Eryth","Mk")]
 gene.list <- list(EM[1:2500],
