@@ -29,3 +29,7 @@ ifnb <- FindClusters(ifnb, resolution = 1.2)
 cluster.labels <- ifnb@meta.data$seurat_clusters
 levels(cluster.labels) <- 1:nlevels(cluster.labels)
 save(cluster.labels,file = "./results/ifnb_ctrl_preclustering_17g.RData")
+
+# Count matrix for TN test (python) ---------------------------------------
+counts <- as.matrix(pbmc@assays$RNA@counts)
+save(counts,file = "./results/ifnb_counts_forpython.RData")
