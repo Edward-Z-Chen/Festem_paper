@@ -144,7 +144,7 @@ for i, c1 in enumerate(np.unique(labels2)):
     print('c1: %5s\ttime elapsed: %.2fs'%(c1, time.time()-start))
 
 # open a file, where you ant to store the data
-file = open('pbmc_TN_test.pickle', 'wb')
+file = open('./results/pbmc_TN_test.pickle', 'wb')
 
 # dump information to that file
 pickle.dump(results, file)
@@ -153,7 +153,7 @@ pickle.dump(results, file)
 file.close()
 
 # open a file, where you stored the pickled data
-#file = open('pbmc_TN_test.pickle', 'rb')
+#file = open('./results/pbmc_TN_test.pickle', 'rb')
 
 # dump information to that file
 #results = pickle.load(file)
@@ -162,7 +162,7 @@ file.close()
 #file.close()
 
 # Result tidy
-for i, (c1, c2) in enumerate(itertools.combinations(range(0,7), 2)):
+for i, (c1, c2) in enumerate(itertools.combinations(range(0,8), 2)):
     results[(c1,c2)] = results[(c1,c2)][1]
     
 for i, c1 in enumerate(range(0,8)):
