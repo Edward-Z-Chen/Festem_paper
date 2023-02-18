@@ -1,6 +1,6 @@
 # Analysis of the IFNB dataset
 
-- 3.1 Download preprocessed data through *SeuratData* and pre-clustering.
+- 3.1 Download preprocessed data through *SeuratData* and pre-clustering. The downloaded data is preprocessed and annotated according to https://satijalab.org/seurat/v3.0/immune_alignment.html.
 
 ## Reference
 Kang, H.M. et al. Multiplexed droplet single-cell RNA-sequencing using natural genetic variation. Nature biotechnology 36, 89-94 (2018).
