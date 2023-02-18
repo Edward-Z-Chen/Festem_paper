@@ -64,7 +64,7 @@ sum(tmp>=30)
 counts <- counts[tmp>=30,]
 
 alpha.label <- numeric(nlevels(cluster.labels)-1)
-for (i in 1:nlevels(cluster.labels)-1) {
+for (i in 1:(nlevels(cluster.labels)-1)) {
   alpha.label[i] <- sum(cluster.labels==i)/ncol(counts)
 }
 
