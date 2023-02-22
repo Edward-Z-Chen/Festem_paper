@@ -73,6 +73,9 @@ results[results[,"FC"]<=0.2,"MAST-f"] <- NA
 load("./results/pbmc_haystack.RData")
 results[,"singleCellHaystack-PCA"] <- exp(haystack_pca$results$log.p.adj)
 results[,"singleCellHaystack-UMAP"] <- exp(haystack_umap$results$log.p.adj)
+load("./results/pbmc_haystack_10PC.RData")
+results[,"singleCellHaystack-PCA-10pc"] <- exp(haystack_pca$results$log.p.adj)
+results[,"singleCellHaystack-UMAP-10pc"] <- exp(haystack_umap$results$log.p.adj)
 load("./results/pbmc_ROSeq.RData")
 results[,"ROSeq"] <- p.adjust(roseq.tmp,"BH")
 
