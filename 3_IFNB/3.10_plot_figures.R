@@ -302,3 +302,28 @@ ggplot(marker_exp, aes(x = factor(id,levels = c("IFNhi CD14 Monocyte","CD14 Mono
         axis.ticks.y=element_blank()) +
   ggtitle("Festem")+xlab("") + ylab("Expression Level")
 dev.off()
+
+## Figure 4G ----------------------------------------------------------------
+ifnb <- readRDS("./results/ifnb_ctrl.rds")
+ifnb <- NormalizeData(ifnb)
+ifnb <- ifnb[,!ifnb@meta.data$seurat_annotations%in%c("Eryth","Mk")]
+marker_list <- list(c("ISG15","ISG20","IFI6","IFIT1","IFITM3","IFIT3","IFI35",
+                      "LY6E","APOBEC3A","RSAD2","OAS1","MX1","TNFSF10","TNFSF13B"))
+ifnb <- AddModuleScore(ifnb,marker_list,name = "IFN")
+
+load("./results/ifnb_ctrl_clustering_tSNE.RData")
+data.tmp <- plots.list[[1]]$data
+exp.tmp <- ifnb@meta.data[,"IFN1"]
+data.tmp <- cbind.data.frame(data.tmp,exp = exp.tmp)
+
+p_ctrl <- ggplot(mapping = aes(x=tSNE_1, y=tSNE_2)) + 
+  geom_point(data = data.tmp,
+             aes(color=exp),
+             cex=0.1,shape = 16)+ 
+  scale_color_gradient(low = "grey75",high = "#CD0404")+
+  theme_pubr()+theme(legend.position="right") +
+  labs(title = "Control",color = "IFN score")
+
+pdf("./figures/Figure4G.pdf",width = 7,height = 4)
+
+dev.off()
