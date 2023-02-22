@@ -54,8 +54,8 @@ load("./results/pbmc_Festem_10g.RData")
 results[colnames(em.result),"Festem_10g"] <- p.adjust(em.result[1,],"BH")
 results[colnames(em.result.9)[em.result.9[2,]<0],"Festem_10g"] <- NA
 load("./results/pbmc_DEseq2.RData")
-results[DEseq.results@rownames,"DESeq2"] <- DEseq.results@listData$padj
-results[DEseq.results@rownames,"DESeq2-full"] <- p.adjust(DEseq.results@listData$pvalue,"BH")
+results[DEseq.results@rownames,"DEseq2"] <- DEseq.results@listData$padj
+results[DEseq.results@rownames,"DEseq2-full"] <- p.adjust(DEseq.results@listData$pvalue,"BH")
 load("./results/pbmc_edgeR.RData")
 results[names(EdgeR.result),"EdgeR"] <- p.adjust(EdgeR.result,"BH")
 load("./results/pbmc_edgeR_full.RData")
