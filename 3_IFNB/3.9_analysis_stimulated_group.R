@@ -97,3 +97,34 @@ em.result.9 <- parApply(cl,counts,1,em.stat,alpha.ini=rbind(alpha.label,rep(1/nl
 print(paste0("Time cost: ",difftime(Sys.time(),time.tmp,units = "secs")))
 
 save(em.result,em.result.9,file = "./results/ifnb_stim_Festem.RData")
+
+# Clustering and TSNE ------------------------------------------------------------------
+result.EM = data.frame(names = colnames(em.result), 
+                       p = p.adjust(em.result[1,],"BH"), 
+                       EM = em.result.9[2,])
+tmp.na <- result.EM[is.na(result.EM$p),1]
+result.EM <- result.EM[!is.na(result.EM$p),]
+gene.names <- result.EM[result.EM$p<0.05 & result.EM$EM>0,]
+gene.names <- gene.names[order(-gene.names$EM),]
+tmp <- result.EM[result.EM$p>=0.05 & result.EM$EM>0,]
+tmp <- tmp[order(-tmp$EM),]
+gene.names <- rbind(gene.names,tmp)
+tmp <- result.EM[result.EM$EM<=0,]
+tmp <- tmp[order(tmp$p,-tmp$EM),]
+gene.names <- rbind(gene.names,tmp)
+gene.names <- gene.names[,1]
+gene.names <- c(gene.names,tmp.na)
+EM <- gene.names
+
+ifnb <- readRDS("./results/ifnb_stim.rds")
+ifnb <- NormalizeData(ifnb)
+ifnb <- ifnb[,!ifnb@meta.data$seurat_annotations%in%c("Eryth","Mk")]
+
+ifnb <- ScaleData(ifnb,features = EM[1:2500])
+ifnb <- RunPCA(ifnb, verbose = FALSE,features = EM[1:2500])
+ifnb <- FindNeighbors(object = ifnb, dims = 1:25)
+ifnb <- FindClusters(object = ifnb, resolution = 1.5)
+ifnb <- RunTSNE(ifnb, reduction = "pca", dims = 1:25)
+label <- ifnb@active.ident
+tsne <- ifnb@reductions[["tsne"]]
+save(label,tsne,file = "./results/ifnb_stim_clustering_tSNE.RData")
