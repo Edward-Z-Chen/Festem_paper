@@ -43,16 +43,16 @@ FC <- apply(FC.list,1,function(x){max(abs(x))})
 results[,"FC"] <- FC
 load("./results/pbmc_Festem.RData")
 results[colnames(em.result),"Festem"] <- p.adjust(em.result[1,],"BH")
-results[colnames(em.result9)[em.result9[2,]<0],"Festem"] <- NA
+results[colnames(em.result.9)[em.result.9[2,]<0],"Festem"] <- NA
 load("./results/pbmc_Festem_gamma0.01.RData")
 results[colnames(em.result),"Festem_gamma0.01"] <- p.adjust(em.result[1,],"BH")
-results[colnames(em.result9)[em.result9[2,]<0],"Festem_gamma0.01"] <- NA
+results[colnames(em.result.9)[em.result.9[2,]<0],"Festem_gamma0.01"] <- NA
 load("./results/pbmc_Festem_7g.RData")
 results[colnames(em.result),"Festem_7g"] <- p.adjust(em.result[1,],"BH")
-results[colnames(em.result9)[em.result9[2,]<0],"Festem_7g"] <- NA
+results[colnames(em.result.9)[em.result.9[2,]<0],"Festem_7g"] <- NA
 load("./results/pbmc_Festem_10g.RData")
 results[colnames(em.result),"Festem_10g"] <- p.adjust(em.result[1,],"BH")
-results[colnames(em.result9)[em.result9[2,]<0],"Festem_10g"] <- NA
+results[colnames(em.result.9)[em.result.9[2,]<0],"Festem_10g"] <- NA
 load("./results/pbmc_DEseq2.RData")
 results[DEseq.results@rownames,"DESeq2"] <- DEseq.results@listData$padj
 results[DEseq.results@rownames,"DESeq2-full"] <- p.adjust(DEseq.results@listData$pvalue,"BH")
