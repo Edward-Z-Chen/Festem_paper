@@ -31,6 +31,7 @@ hvgdisp <- VariableFeatures(pbmc)
 
 
 # DUBStepR ----------------------------------------------------------------
+library(DUBStepR)
 dub.list <- DUBStepR(pbmc@assays$RNA@data)
 dub <- dub.list[["optimal.feature.genes"]]
 rm(dub.list)
