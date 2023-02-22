@@ -16,16 +16,17 @@ cl <- makeCluster(getOption("cl.cores", 12))
 clusterSetRNGStream(cl, iseed = 321)
 
 ifnb <- readRDS("./results/ifnb_ctrl.rds")
-### This prior is generated with all genes, 20pca, 0.9reso on my laptop (code in preprocessing.R)
+### This prior is generated with all genes, 20pca, 0.7reso on my laptop (code in preprocessing.R)
 load("./results/ifnb_ctrl_preclustering.RData")
 
-### This prior is generated with all genes, 20pca, 0.7reso on my laptop (code in preprocessing.R)
+### This prior is generated with all genes, 20pca, 0.6reso on my laptop (code in preprocessing.R)
 # load("./results/ifnb_ctrl_preclustering_13g.RData")
 
-### This prior is generated with all genes, 20pca, 1.2reso on my laptop (code in preprocessing.R)
+### This prior is generated with all genes, 20pca, 1reso on my laptop (code in preprocessing.R)
 # load("./results/ifnb_ctrl_preclustering_17g.RData")
 levels(cluster.labels) <- 1:nlevels(cluster.labels)
 counts <- ifnb@assays$RNA@counts
+raw.lib <- ifnb@meta.data$nCount_RNA
 counts <- as.matrix(counts)
 
 ## Outlier
@@ -44,7 +45,7 @@ rm.outlier <- function(x,percent){
 counts <- t(parApply(cl,counts,1,rm.outlier,percent = 0.95))
 
 ## Sub-sampling
-library.size <- calcNormFactors(counts)
+library.size <- calcNormFactors(counts,lib.size = raw.lib)
 sub.sample <- function(x){
   library.size <- x[1]
   x <- x[-1]

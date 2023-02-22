@@ -1,5 +1,6 @@
 library(Seurat)
 ifnb <- readRDS("./results/ifnb_ctrl.rds")
+ifnb <- NormalizeData(ifnb)
 
 
 # Festem ------------------------------------------------------------------
@@ -31,6 +32,7 @@ hvgdisp <- VariableFeatures(ifnb)
 
 
 # DUBStepR ----------------------------------------------------------------
+library(DUBStepR)
 dub.list <- DUBStepR(ifnb@assays$RNA@data)
 dub <- dub.list[["optimal.feature.genes"]]
 rm(dub.list)
@@ -48,6 +50,6 @@ source("../utils/trendVar.R")
 library(SingleCellExperiment)
 trendvar <- trendVarFS(ifnb@assays$RNA@counts,ifnb@assays$RNA@data)
 sum(trendvar[["var.out"]]@listData$FDR < 0.05,na.rm = T)
-trendvar <- trendvar["genes"]
+trendvar <- trendvar[["genes"]]
 
 save(EM,hvgvst,hvgdisp,dub,devianceFS,trendvar,file = "./results/ifnb_ctrl_hvggenes.RData")
