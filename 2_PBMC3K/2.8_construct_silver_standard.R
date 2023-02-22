@@ -9,6 +9,7 @@ umap_hvg <- umap_hvg[rownames(plots.list[[2]]$data),]
 # Housekeeping genes ------------------------------------------------------
 load("Housekeeping_GenesHuman.RData")
 Housekeeping_Genes <- dplyr::filter(Housekeeping_Genes,Gene.name%in%rownames(pbmc))
+genes <- Housekeeping_Genes$Gene.name
 moran_h <- RunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
 
 # Non-housekeeping genes --------------------------------------------------
