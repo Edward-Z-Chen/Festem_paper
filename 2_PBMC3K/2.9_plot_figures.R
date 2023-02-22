@@ -16,6 +16,12 @@ if (!file.exists("./figures")){
 }
 # Figure 3 (A) -- left top and Figure S5 top ------------------------------------------------
 ## Summarizing results from various DEG detection methods
+pbmc <- readRDS("./results/pbmc3k.rds")
+load("./results/pbmc3k_label.RData")
+cluster.label[c("CGGGCATGACCCAA-1","CTTGATTGATCTTC-1")] <- "Platelet"
+pbmc <- pbmc[,cluster.label!="Platelet"]
+cluster.label <- factor(cluster.label[cluster.label!="Platelet"])
+pbmc <- AddMetaData(pbmc,cluster.label,"HVG")
 results <- matrix(nrow = nrow(pbmc),ncol = 19,
                   dimnames = list(rownames(pbmc),
                                   c("Festem","Festem_gamma0.01","Festem_7g","Festem_10g",
@@ -27,12 +33,6 @@ results <- matrix(nrow = nrow(pbmc),ncol = 19,
                                     "singleCellHaystack-UMAP",
                                     "singleCellHaystack-PCA-10pc",
                                     "singleCellHaystack-UMAP-10pc","TN_test","ROSeq")))
-pbmc <- readRDS("./results/pbmc3k.rds")
-load("./results/pbmc3k_label.RData")
-cluster.label[c("CGGGCATGACCCAA-1","CTTGATTGATCTTC-1")] <- "Platelet"
-pbmc <- pbmc[,cluster.label!="Platelet"]
-cluster.label <- factor(cluster.label[cluster.label!="Platelet"])
-pbmc <- AddMetaData(pbmc,cluster.label,"HVG")
 FC.list <- vector("list",8)
 for (i in 1:8){
   FC.list[[i]] <- FoldChange(pbmc,ident.1 = levels(cluster.label)[i],
