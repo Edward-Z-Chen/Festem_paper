@@ -39,42 +39,6 @@ for (i in 1:nrow(counts)){
   counts[i,outlier.index] <- round(mean.noout)
 }
 
-# # counts.biclust <- biclust(counts,method = BCCC(),delta = 1,alpha = 1.5,number = 10)
-# #
-# # for (i in 1:counts.biclust@Number){
-# #   for (j in 1:counts.biclust@Number){
-# #     tmp <- counts[counts.biclust@RowxNumber[,i],counts.biclust@NumberxCol[j,]]
-# #     Q13 <- quantile(tmp,c(0.25,0.75))
-# #     if (Q13[2]==Q13[1]) Q13[2] <- Q13[1]+1
-# #     upper <- max(Q13[2]*4-3*Q13[1],1)
-# #     lower <- max(Q13[1]*4-3*Q13[2],0)
-# #     for (k in 1:nrow(tmp)){
-# #       if (sum(tmp[k,]>=upper | tmp[k,]< lower)<ncol(tmp)) tmp[k,tmp[k,]>=upper | tmp[k,]< lower] <- round(mean(tmp[k,tmp[k,]<upper]))
-# #       else cat(i," ",j," ",rownames(tmp)[k],"\n")
-# #     }
-# #     counts[counts.biclust@RowxNumber[,i],counts.biclust@NumberxCol[j,]] <- tmp
-# #   }
-# # }
-# # for (i in 1:nrow(counts)){
-# #   tmp <- isOutlier(counts[i,],nmad = 5,type = "higher",batch = cluster.labels)
-# #   for (j in which(tmp)){
-# #     counts[i,j] <- mean(counts[i,cluster.labels==cluster.labels[j] & (!tmp)])
-# #   }
-# # }
-#
-# # for (i in 1:nrow(counts)){
-# #   Q13 <- quantile(counts[i,],c(0.25,0.75))
-# #   if (Q13[2]==Q13[1]) Q13[2] <- Q13[1]+1
-# #   upper <- max(Q13[2]*5-4*Q13[1],1)
-# #   lower <- max(Q13[1]*5-4*Q13[2],0)
-# #   for (k in 1:max(cluster.labels)){
-# #     tmp <- counts[i,cluster.labels==k]
-# #     outlier.index <- which(tmp>upper | tmp<lower)
-# #     tmp[outlier.index] <- round(mean(tmp[-outlier.index]))
-# #     counts[i,cluster.labels==k] <- tmp
-# #   }
-# # }
-
 ## Sub-sampling
 library.size <- calcNormFactors(counts,lib.size = raw.lib)
 sub.sample <- function(x,library.size){
@@ -87,7 +51,6 @@ sub.sample <- function(x,library.size){
 for (i in 1:ncol(counts)){
   counts[,i] <- sub.sample(counts[,i],library.size[i])
 }
-# load("pbmc_subsample_new.RData")
 
 ## Outlier2
 for (i in 1:nrow(counts)){
