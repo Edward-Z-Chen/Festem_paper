@@ -15,7 +15,7 @@ if (!file.exists("./figures")){
   dir.create("./figures")
 }
 # Figure 3 (A) -- left top and Figure S5 top ------------------------------------------------
-## Summarising results from various DEG detection methods
+## Summarizing results from various DEG detection methods
 results <- matrix(nrow = nrow(pbmc),ncol = 19,
                   dimnames = list(rownames(pbmc),
                                   c("Festem","Festem_gamma0.01","Festem_7g","Festem_10g",
