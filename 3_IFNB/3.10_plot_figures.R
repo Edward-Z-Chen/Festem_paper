@@ -231,5 +231,74 @@ dev.off()
 
 # Figure 4 ----------------------------------------------------------------
 load("./results/ifnb_ctrl_clustering_tSNE.RData")
-my.color <- hue_pal()(13)
-names(my.color) <- 1:13
+my.color <- hue_pal()(17)
+names(my.color) <- 1:17
+
+## Figure 4E ----------------------------------------------------------------
+label.tmp <- label.list[[1]]
+levels(label.tmp) <- rank(-summary(label.tmp),ties.method = "first")
+tsne.tmp <- tsne.for.plot(tsne.list[[1]],label.tmp)
+
+class_avg <- tsne.tmp %>%
+  group_by(cluster) %>%
+  summarise(
+    tSNE_1 = median(tSNE_1),
+    tSNE_2 = median(tSNE_2)
+  )
+class_avg <- cbind(class_avg,class_avg[,1])
+colnames(class_avg)[4] <- "cluster.anno"
+class_avg[,4] <- plyr::mapvalues(class_avg[,4],1:17,c("CD14 Monocyte","CD4 Memory T","CD4 Naive T",
+                                                      "CD14 Monocyte","CD16 monocyte","CD14 Monocyte",
+                                                      "B","T activated","CD8 T","NK","DC", "B Activated",
+                                                      "T cell:monocyte complex","HSP+ CD4 T",
+                                                      "IFNhi CD14 Monocyte","	CD34+ progenitors","pDC"))
+levels(tsne.tmp$cluster)[c(1,4,6)] <- 1
+pdf("./figures/Figure4E.pdf",width = 4,height = 4)
+ggplot(tsne.tmp, aes(x=tSNE_1, y=tSNE_2, color=cluster)) + 
+  geom_point(cex=0.1) + theme_pubr()+
+  theme(legend.position="none",text = element_text(size = 15)) +
+  # ggrepel::geom_label_repel(data = class_avg,aes(x=tSNE_1,y = tSNE_2,label = cluster.anno),label.padding = unit(0.1,'cm'),label.size = 0.15)+
+  geom_text(aes(x=tSNE_1,y = tSNE_2,label = cluster.anno), data = class_avg,inherit.aes = F, color = "black",fontface = "bold",size = 3)+
+  labs(title = names(label.list)[1])+scale_color_manual(values = my.color,name = "Clusters")
+dev.off()
+
+## Figure 4F ----------------------------------------------------------------
+library(cowplot)
+ifnb <- readRDS("./results/ifnb_ctrl.rds")
+ifnb <- NormalizeData(ifnb)
+ifnb <- ifnb[,!ifnb@meta.data$seurat_annotations%in%c("Eryth","Mk")]
+marker_list <- c("ISG15","ISG20","IFI6","IFIT1","IFITM3","IFIT3","IFI35",
+                 "LY6E","APOBEC3A","RSAD2","OAS1","MX1","TNFSF10","TNFSF13B")
+ifnb <- ScaleData(ifnb,features = marker_list)
+marker_exp <- data.frame(exp = as.numeric(ifnb@assays$RNA@scale.data[marker_list,plots.list[[1]]$data$cluster=="14"]),
+                         gene = rep(marker_list,sum(plots.list[[1]]$data$cluster=="14")),
+                         id = "IFNhi CD14 Monocyte")
+marker_exp <- rbind(marker_exp,data.frame(exp = as.numeric(ifnb@assays$RNA@scale.data[marker_list,plots.list[[1]]$data$cluster %in% c(0,3,5)]),
+                                          gene = rep(marker_list,sum(plots.list[[1]]$data$cluster %in% c(0,3,5))),
+                                          id = "CD14 Monocyte"))
+set.seed(321)
+noise <- rnorm(n = nrow(marker_exp)) / 100000
+marker_exp$exp <- marker_exp$exp+noise
+marker_exp$gene <- factor(marker_exp$gene,levels = marker_list)
+color <- my.color[c(1,15)]
+names(color) <- c("CD14 Monocyte","IFNhi CD14 Monocyte")
+
+pdf("./figures/Figure4F.pdf",width = 4,height = 5.5)
+ggplot(marker_exp, aes(x = factor(id,levels = c("IFNhi CD14 Monocyte","CD14 Monocyte")),
+                       y = exp, fill = id)) +
+  geom_violin(scale = "width", adjust = 0.8, trim = T) +
+  scale_y_continuous(expand = c(0, 0), position="left", labels = function(x)
+    c(rep(x = "", times = length(x)-2), x[length(x) - 1], "")) +
+  facet_grid(rows = vars(gene), scales = "free") +
+  cowplot::theme_cowplot(font_size = 12) +
+  scale_fill_discrete(type = color)+
+  theme(legend.position = "none", panel.spacing = unit(0, "lines"),
+        panel.background = element_rect(fill = NA, color = "black"),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        strip.text.y.right = element_text(angle = 0),
+        axis.text.x = element_text(angle = 45,hjust = 1),
+        axis.text.y=element_blank(),  #remove y axis labels
+        axis.ticks.y=element_blank()) +
+  ggtitle("Festem")+xlab("") + ylab("Expression Level")
+dev.off()
