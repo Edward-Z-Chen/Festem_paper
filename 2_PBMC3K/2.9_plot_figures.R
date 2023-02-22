@@ -28,7 +28,6 @@ results <- matrix(nrow = nrow(pbmc),ncol = 19,
                                     "singleCellHaystack-PCA-10pc",
                                     "singleCellHaystack-UMAP-10pc","TN_test","ROSeq")))
 pbmc <- readRDS("./results/pbmc3k.rds")
-pbmc <- as.SingleCellExperiment(pbmc)
 load("./results/pbmc3k_label.RData")
 cluster.label[c("CGGGCATGACCCAA-1","CTTGATTGATCTTC-1")] <- "Platelet"
 pbmc <- pbmc[,cluster.label!="Platelet"]
