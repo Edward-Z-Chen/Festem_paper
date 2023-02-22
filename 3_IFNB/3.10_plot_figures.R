@@ -324,6 +324,24 @@ p_ctrl <- ggplot(mapping = aes(x=tSNE_1, y=tSNE_2)) +
   theme_pubr()+theme(legend.position="right") +
   labs(title = "Control",color = "IFN score")
 
-pdf("./figures/Figure4G.pdf",width = 7,height = 4)
+load("./results/ifnb_stim_clustering_tSNE.RData")
+ifnb_stim <- readRDS("./results/ifnb_stim.rds")
+ifnb_stim <- NormalizeData(ifnb_stim)
+ifnb_stim <- ifnb_stim[,!ifnb_stim@meta.data$seurat_annotations%in%c("Eryth","Mk")]
+ifnb_stim <- AddModuleScore(ifnb_stim,marker_list,name = "IFN")
+data.tmp <- tsne.for.plot(tsne,label)
+exp.tmp <- ifnb_stim@meta.data[,"IFN1"]
+data.tmp <- cbind.data.frame(data.tmp,exp = exp.tmp)
+p_stim <- 
+  ggplot(mapping = aes(x=tSNE_1, y=tSNE_2)) + 
+  geom_point(data = data.tmp,
+             aes(color=exp),
+             cex=0.1,shape = 16)+ 
+  scale_color_gradient(low = "grey75",high = "#CD0404")+
+  theme_pubr()+theme(legend.position="right") +
+  labs(title = "Stimulated",color = "IFN score")
 
+
+pdf("./figures/Figure4G.pdf",width = 7,height = 4)
+ggarrange(p_ctrl,p_stim,ncol = 2, labels = c("A","B"),common.legend = T,legend = "bottom")
 dev.off()
