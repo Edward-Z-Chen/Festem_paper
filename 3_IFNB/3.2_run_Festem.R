@@ -16,13 +16,13 @@ cl <- makeCluster(getOption("cl.cores", 12))
 clusterSetRNGStream(cl, iseed = 321)
 
 ifnb <- readRDS("./results/ifnb_ctrl.rds")
-### This prior is generated with all genes, 20pca, 0.7reso on my laptop (code in preprocessing.R)
+### This prior is generated with all genes, 20pca, 0.7reso on my laptop (code in 3.1)
 load("./results/ifnb_ctrl_preclustering.RData")
 
-### This prior is generated with all genes, 20pca, 0.6reso on my laptop (code in preprocessing.R)
+### This prior is generated with all genes, 20pca, 0.6reso on my laptop (code in 3.1)
 # load("./results/ifnb_ctrl_preclustering_13g.RData")
 
-### This prior is generated with all genes, 20pca, 1reso on my laptop (code in preprocessing.R)
+### This prior is generated with all genes, 20pca, 1reso on my laptop (code in 3.1)
 # load("./results/ifnb_ctrl_preclustering_17g.RData")
 levels(cluster.labels) <- 1:nlevels(cluster.labels)
 counts <- ifnb@assays$RNA@counts
