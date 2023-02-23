@@ -8,7 +8,7 @@
 - 2.6 Clustering and UMAP reduction based on top 1000 genes selected by each method and the top 15 PCs.
 - 2.7 Calculate CH indices of the PCs and clustering results derived from genes selected by feature selection methods.
 - 2.8 Construct silver standard of DEGs based on housekeeping genes downloaded from https://housekeeping.unicamp.br/Housekeeping_GenesHuman.RData.
-- 2.9 Figure 3A (top left), Figure 4, Figure S1, Figure S4A, Figure S5 (top), Figure S6 (top left), Figure S7, Figure S8 and Figure S18.
+- 2.9 Figure 3A (top left), Figure 4A-D, Figure S1, Figure S4A, Figure S5 (top), Figure S6 (top left), Figure S7, Figure S8 and Figure S18.
 
 **Remark**: For results in 2.3 and 2.4, we only provide a tidy version named "pbmc3k_DEG_results.RData" derived from 2.9 in the "results" folder.
 
