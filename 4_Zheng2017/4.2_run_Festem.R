@@ -62,7 +62,7 @@ rownames(counts) <- rownames(pbmc)
 
 nonzeros.num <- function(x){sum(x!=0)}
 tmp <- apply(counts, 1, nonzeros.num)
-min.cell <- min(0.01*ncol(counts.tmp),30)
+min.cell <- min(0.01*ncol(counts),30)
 sum(tmp>=min.cell)
 counts <- counts[tmp>=min.cell,]
 
@@ -141,7 +141,7 @@ rownames(counts) <- rownames(pbmc)
 
 nonzeros.num <- function(x){sum(x!=0)}
 tmp <- apply(counts, 1, nonzeros.num)
-min.cell <- min(0.01*ncol(counts.tmp),30)
+min.cell <- min(0.01*ncol(counts),30)
 sum(tmp>=min.cell)
 counts <- counts[tmp>=min.cell,]
 
