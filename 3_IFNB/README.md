@@ -11,11 +11,17 @@
 - 3.9 Festem algorithm and clustering of the stimulated group with the same procedure.
 - 3.10 Figure 3A (top right), Figure 4E-G, Figure S5 (second from top), Figure S6 (top right), Figure S9, Figure S10, Figure S11, Figure S12 and Figure S13. In Figure S12A and B, we performed integrated analysis of the control and stimulated groups with *Harmony*. P-values of features were combined with the Bonferroni procedure and FDR were controlled with the Benjamini-Hochberg procedure.
 
+**Remark**: For results in 3.3 and 3.4, we only provide a tidy version named "ifnb_ctrl_DEG_results.RData" derived from 3.10 in the "results" folder.
+
 ## Reference
 
 Kang, H.M. et al. Multiplexed droplet single-cell RNA-sequencing using natural genetic variation. Nature biotechnology 36, 89-94 (2018).
 
 Vovk, V. & Wang, R. Combining P-Values Via Averaging. Political Methods: Quantitative Methods eJournal (2012).
+
+## Prerequisite
+
+- Download housekeeping gene list from https://housekeeping.unicamp.br/Housekeeping_GenesHuman.RData and place it in **this** folder.
 
 ## Dependency
 
