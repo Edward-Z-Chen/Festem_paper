@@ -73,7 +73,7 @@ trendvar <- trendVarFS(pbmc@assays$RNA@counts,pbmc@assays$RNA@data)
 sum(trendvar[["var.out"]]@listData$FDR < 0.05,na.rm = T)
 trendvar <- trendvar[["genes"]]
  
-save(EM,hvgvst,hvgdisp,dub,devianceFS,trendvar,file = "b1_hvggenes.RData")
+save(EM,hvgvst,hvgdisp,dub,devianceFS,trendvar,file = "./results/b1_hvggenes.RData")
 
 # Batch 2 -----------------------------------------------------------------
 
@@ -136,4 +136,4 @@ trendvar <- trendVarFS(pbmc@assays$RNA@counts,pbmc@assays$RNA@data)
 sum(trendvar[["var.out"]]@listData$FDR < 0.05,na.rm = T)
 trendvar <- trendvar[["genes"]]
 
-save(EM,hvgvst,hvgdisp,dub,devianceFS,trendvar,file = "b2_hvggenes.RData")
+save(EM,hvgvst,hvgdisp,dub,devianceFS,trendvar,file = "./results/b2_hvggenes.RData")
