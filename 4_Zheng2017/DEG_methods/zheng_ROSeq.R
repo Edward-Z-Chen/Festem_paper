@@ -33,7 +33,7 @@ roseq.tmp <- roseq.tmp * nlevels(cluster.label)
 save(roseq.tmp,file = "./results/b1_ROSeq.RData")
 stopCluster(cl)
 
-# Batch 1 -----------------------------------------------------------------
+# Batch 2 -----------------------------------------------------------------
 
 pbmc <- readRDS("./results/b2.rds")
 pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
