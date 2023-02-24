@@ -20,5 +20,3 @@ rm(list = ls())
 
 source("./DEG_methods/zheng_ROSeq.R")
 rm(list = ls())
-source("./DEG_methods/zheng_ROSeq.R")
-rm(list = ls())
