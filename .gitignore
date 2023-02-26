@@ -5,3 +5,5 @@
 /3_IFNB/figures
 /4_Zheng2017/*.tar.gz
 /4_Zheng2017/results/*.rds
+/4_Zheng2017/results/*_ROSeq.RData
+/4_Zheng2017/results/*_singleCellHaystack.RData
