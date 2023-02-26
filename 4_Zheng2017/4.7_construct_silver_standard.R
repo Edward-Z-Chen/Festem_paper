@@ -8,7 +8,7 @@ pbmc <- FindVariableFeatures(pbmc,nfeatures = 2000)
 pbmc <- ScaleData(pbmc)
 pbmc <- RunPCA(pbmc,features = VariableFeatures(pbmc),verbose = F)
 ElbowPlot(pbmc)
-pbmc <- RunUMAP(pbmc,dims = 1:20)
+pbmc <- RunUMAP(pbmc,dims = 1:30)
 umap_hvg <- pbmc@reductions[["umap"]]@cell.embeddings
 
 # Housekeeping genes ------------------------------------------------------
@@ -39,7 +39,7 @@ pbmc <- FindVariableFeatures(pbmc,nfeatures = 2000)
 pbmc <- ScaleData(pbmc)
 pbmc <- RunPCA(pbmc,features = VariableFeatures(pbmc),verbose = F)
 ElbowPlot(pbmc)
-pbmc <- RunUMAP(pbmc,dims = 1:20)
+pbmc <- RunUMAP(pbmc,dims = 1:30)
 umap_hvg <- pbmc@reductions[["umap"]]@cell.embeddings
 
 # Housekeeping genes ------------------------------------------------------
