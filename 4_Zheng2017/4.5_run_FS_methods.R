@@ -14,8 +14,8 @@ library(R.utils)
 # Batch 1 -----------------------------------------------------------------
 
 pbmc <- readRDS("./results/b1.rds")
-pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
 pbmc <- NormalizeData(pbmc)
+pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
 
 load("./results/b1_Festem.RData")
 ## EM
@@ -78,8 +78,8 @@ save(EM,hvgvst,hvgdisp,dub,devianceFS,trendvar,file = "./results/b1_hvggenes.RDa
 # Batch 2 -----------------------------------------------------------------
 
 pbmc <- readRDS("./results/b2.rds")
-pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
 pbmc <- NormalizeData(pbmc)
+pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
 load("./results/b2_Festem.RData")
 ## EM
 result.EM = data.frame(names = colnames(em.result), 

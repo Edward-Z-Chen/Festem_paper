@@ -5,8 +5,9 @@ library(fpc)
 # Batch 1 -----------------------------------------------------------------
 pbmc <- readRDS("./results/b1.rds")
 load("./results/b1_hvggenes.RData")
-pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
 pbmc <- NormalizeData(pbmc)
+pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
+
 
 gene.list <- list(EM[1:3000],
                   hvgvst[1:3000],
@@ -33,8 +34,9 @@ save(CH.index,file = "./results/b1_CH.RData")
 # Batch 2 -----------------------------------------------------------------
 pbmc <- readRDS("./results/b2.rds")
 load("./results/b2_hvggenes.RData")
-pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
 pbmc <- NormalizeData(pbmc)
+pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
+
 
 gene.list <- list(EM[1:3000],
                   hvgvst[1:3000],

@@ -17,6 +17,7 @@ cl <- makeCluster(getOption("cl.cores", 12))
 clusterSetRNGStream(cl, iseed = 321)
 
 pbmc <- readRDS("./results/b1.rds")
+pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
 ### This prior is generated with all genes, 20pca, 0.4reso on my laptop (code in 4.1)
 load("./results/b1_preclustering.RData")
 
@@ -96,6 +97,7 @@ cl <- makeCluster(getOption("cl.cores", 12))
 clusterSetRNGStream(cl, iseed = 321)
 
 pbmc <- readRDS("./results/b2.rds")
+pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
 ### This prior is generated with all genes, 20pca, 0.4reso on my laptop (code in 4.1)
 load("./results/b2_preclustering.RData")
 
