@@ -22,10 +22,10 @@ pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryo
 load("./results/b1_preclustering.RData")
 
 ### This prior is generated with all genes, 20pca, 0.5reso on my laptop (code in 4.1)
-# load("./results/b1_preclustering_15g.RData")
+# load("./results/b1_preclustering_13g.RData")
 
 ### This prior is generated with all genes, 20pca, 0.3reso on my laptop (code in 4.1)
-# load("./results/b1_preclustering_12g.RData")
+# load("./results/b1_preclustering_17g.RData")
 levels(cluster.labels) <- 1:nlevels(cluster.labels)
 counts <- pbmc@assays$RNA@counts
 raw.lib <- pbmc@meta.data$nCount_RNA
@@ -102,10 +102,10 @@ pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryo
 load("./results/b2_preclustering.RData")
 
 ### This prior is generated with all genes, 20pca, 0.5reso on my laptop (code in 4.1)
-# load("./results/b2_preclustering_16g.RData")
+# load("./results/b2_preclustering_12g.RData")
 
 ### This prior is generated with all genes, 20pca, 0.2reso on my laptop (code in 4.1)
-# load("./results/b2_preclustering_13g.RData")
+# load("./results/b2_preclustering_8g.RData")
 levels(cluster.labels) <- 1:nlevels(cluster.labels)
 counts <- pbmc@assays$RNA@counts
 raw.lib <- pbmc@meta.data$nCount_RNA
