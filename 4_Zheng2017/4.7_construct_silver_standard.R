@@ -29,7 +29,7 @@ cal_express_percent <- function(x){
 }
 gene_percent <- apply(pbmc@assays$RNA@counts,1,cal_express_percent)
 
-save(moran_h,moran_nonh,gene_percent,file = "./results/b2_silver_standard.RData")
+save(moran_h,moran_nonh,gene_percent,file = "./results/b1_silver_standard.RData")
 
 # Batch 2 -----------------------------------------------------------------
 
