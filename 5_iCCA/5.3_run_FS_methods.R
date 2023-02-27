@@ -81,6 +81,6 @@ trendVarFS <- function(counts, data,block) {
 }
 trendvar <- trendVarFS(nonepi@assays$RNA@counts,nonepi@assays$RNA@data,block = factor(nonepi@meta.data$Patient))
 sum(trendvar[["var.out"]]@listData$FDR < 0.05,na.rm = T)
-trendvar <- trendvar["genes"]
+trendvar <- trendvar["genes"][[1]]
 
 save(hvgvst,EM,hvgdisp,dub,devianceFS,trendvar,file = "./results/iCCA_hvggenes.RData")
