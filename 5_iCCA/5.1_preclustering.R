@@ -1,0 +1,13 @@
+library(Seurat)
+nonepi <- readRDS("./NonEpi.rds")
+nonepi <- FindVariableFeatures(object = nonepi, selection.method = "vst", nfeatures = 10000,verbose = FALSE)
+nonepi <- ScaleData(nonepi)
+nonepi <- RunPCA(nonepi)
+ElbowPlot(object = nonepi,ndims = 50)
+nonepi <- FindNeighbors(object = nonepi, dims = 1:30)
+nonepi <- FindClusters(object = nonepi, resolution = 0.2)
+nonepi <- RunUMAP(nonepi, reduction = "pca", dims = 1:30)
+DimPlot(object = nonepi, reduction = 'umap',label = TRUE)
+DimPlot(object = nonepi, reduction = 'umap',label = TRUE,group.by = "Celltype")
+cluster.labels <- nonepi@active.ident
+save(cluster.labels,file = "iCCA_preclustering.RData")
