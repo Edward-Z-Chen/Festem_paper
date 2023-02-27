@@ -19,7 +19,7 @@ genes <- unique(genes)
 moran_h <- RunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
 
 # Non-housekeeping genes --------------------------------------------------
-genes <- intersect(rownames(pbmc),Housekeeping_Genes$Gene.name)
+genes <- setdiff(rownames(pbmc),Housekeeping_Genes$Gene.name)
 moran_nonh <- RunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
 
 
@@ -50,7 +50,7 @@ genes <- unique(genes)
 moran_h <- RunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
 
 # Non-housekeeping genes --------------------------------------------------
-genes <- intersect(rownames(pbmc),Housekeeping_Genes$Gene.name)
+genes <- setdiff(rownames(pbmc),Housekeeping_Genes$Gene.name)
 moran_nonh <- RunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
 
 
