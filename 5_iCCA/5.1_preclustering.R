@@ -10,4 +10,4 @@ nonepi <- RunUMAP(nonepi, reduction = "pca", dims = 1:30)
 DimPlot(object = nonepi, reduction = 'umap',label = TRUE)
 DimPlot(object = nonepi, reduction = 'umap',label = TRUE,group.by = "Celltype")
 cluster.labels <- nonepi@active.ident
-save(cluster.labels,file = "iCCA_preclustering.RData")
+save(cluster.labels,file = "./results/iCCA_preclustering.RData")
