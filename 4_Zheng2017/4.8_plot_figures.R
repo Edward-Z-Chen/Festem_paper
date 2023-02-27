@@ -83,7 +83,7 @@ calc_house_retrieve <- function(DEG_list,house_list){
   sum(DEG_list%in%house_list)/length(house_list)
 }
 load("./results/b1_silver_standard.RData")
-g1 <- rownames(moran_h)[abs(moran_h[,1])<0.001 & moran_h[,2]>0.05]
+g1 <- rownames(moran_h)[abs(moran_h[,1])<0.005 & moran_h[,2]>0.05]
 moran_nonh <- moran_nonh[!is.na(moran_nonh[,1]),]
 g2 <- rownames(moran_nonh)[moran_nonh[,1]>0.1]
 g2 <- g2[gene_percent[g2]>0.05]
@@ -234,7 +234,7 @@ pbmc <- FindVariableFeatures(pbmc,nfeatures = nrow(pbmc),selection.method = "dis
 hvgdisp <- VariableFeatures(pbmc)
 
 load("./results/b1_silver_standard.RData")
-g1 <- rownames(moran_h)[abs(moran_h[,1])<0.001 & moran_h[,2]>0.05]
+g1 <- rownames(moran_h)[abs(moran_h[,1])<0.005 & moran_h[,2]>0.05]
 moran_nonh <- moran_nonh[!is.na(moran_nonh[,1]),]
 g2 <- rownames(moran_nonh)[moran_nonh[,1]>0.1]
 g2 <- g2[gene_percent[g2]>0.05]
@@ -392,7 +392,7 @@ calc_house_retrieve <- function(DEG_list,house_list){
   sum(DEG_list%in%house_list)/length(house_list)
 }
 load("./results/b2_silver_standard.RData")
-g1 <- rownames(moran_h)[abs(moran_h[,1])<0.001 & moran_h[,2]>0.05]
+g1 <- rownames(moran_h)[abs(moran_h[,1])<0.005 & moran_h[,2]>0.05]
 moran_nonh <- moran_nonh[!is.na(moran_nonh[,1]),]
 g2 <- rownames(moran_nonh)[moran_nonh[,1]>0.1]
 g2 <- g2[gene_percent[g2]>0.05]
