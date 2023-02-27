@@ -1,4 +1,24 @@
 library(Seurat)
+myRunMoransI <- function(data, pos,num.core = 24){
+  # Parallel implementation of Seurat's function, RunMoransI.
+  # Relying on "Rfast2" package.
+  require(parallel)
+  cl <- makeCluster(getOption("cl.cores", num.core))
+  data <- as.matrix(data)
+  pos.dist <- dist(x = pos)
+  pos.dist.mat <- as.matrix(x = pos.dist)
+  weights <- 1/pos.dist.mat^2
+  diag(x = weights) <- 0
+  results <- parSapply(cl,X = 1:nrow(x = data), FUN = function(x) {
+    Rfast2::moranI(data[x, ], weights)
+  })
+  pcol <- 2
+  results <- data.frame(observed = unlist(x = results[1, ]), 
+                        p.value = unlist(x = results[pcol, ]))
+  rownames(x = results) <- rownames(x = data)
+  stopCluster(cl)
+  return(results)
+}
 
 # Batch 1 -----------------------------------------------------------------
 
@@ -16,11 +36,11 @@ load("Housekeeping_GenesHuman.RData")
 Housekeeping_Genes <- dplyr::filter(Housekeeping_Genes,Gene.name%in%rownames(pbmc))
 genes <- Housekeeping_Genes$Gene.name
 genes <- unique(genes)
-moran_h <- RunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
+moran_h <- myRunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
 
 # Non-housekeeping genes --------------------------------------------------
 genes <- setdiff(rownames(pbmc),Housekeeping_Genes$Gene.name)
-moran_nonh <- RunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
+moran_nonh <- myRunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
 
 
 # Non-zero expression percentage ------------------------------------------
@@ -47,11 +67,11 @@ load("Housekeeping_GenesHuman.RData")
 Housekeeping_Genes <- dplyr::filter(Housekeeping_Genes,Gene.name%in%rownames(pbmc))
 genes <- Housekeeping_Genes$Gene.name
 genes <- unique(genes)
-moran_h <- RunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
+moran_h <- myRunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
 
 # Non-housekeeping genes --------------------------------------------------
 genes <- setdiff(rownames(pbmc),Housekeeping_Genes$Gene.name)
-moran_nonh <- RunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
+moran_nonh <- myRunMoransI(pbmc@assays$RNA@data[genes,],umap_hvg)
 
 
 # Non-zero expression percentage ------------------------------------------
