@@ -44,7 +44,7 @@ sub.sample <- function(x){
   apply(matrix(x), 1, sample.count,library.size = library.size)
 }
 
-cl <- makeCluster(getOption("cl.cores", 20))
+cl <- makeCluster(getOption("cl.cores", 12))
 clusterSetRNGStream(cl, iseed = 321)
 em.result <- vector("list",nlevels(batch.id))
 em.result.9 <- vector("list",nlevels(batch.id))
