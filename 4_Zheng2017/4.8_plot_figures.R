@@ -135,7 +135,7 @@ pdf("./figures/FigureS5_b1_left.pdf",height = 6,width = 6)
 ggplot(data = power_frame2,mapping = aes(x = recall, y = precision))+
   geom_point(aes(color = method, shape = method),
              size = 4,stroke = 1)+
-  scale_x_continuous(limits = c(0.2,1))+
+  scale_x_continuous(limits = c(0.4,1))+
   scale_y_continuous(limits = c(0.2,1))+
   geom_function(fun = ~ {1/(2/0.9-1/.x)},color = "grey75",linetype = "dashed")+
   geom_function(fun = ~ {1/(2/0.8-1/.x)},color = "grey75",linetype = "dashed")+
@@ -184,7 +184,7 @@ pdf("./figures/Figure3A_bottomleft.pdf",height = 4,width = 3.5)
 ggplot(data = power_frame2,mapping = aes(x = recall, y = precision))+
   geom_point(aes(color = method, shape = method),
              size = 4,stroke = 1)+
-  scale_x_continuous(limits = c(0.1,1))+
+  scale_x_continuous(limits = c(0,1))+
   scale_y_continuous(limits = c(0.2,1))+
   coord_trans(y=double_exp())+
   geom_function(fun = ~ {1/(2/0.9-1/.x)},color = "grey75",linetype = "dashed")+
@@ -208,6 +208,7 @@ num_reject$method <- factor(num_reject$method)
 levels(num_reject$method) <- plyr::mapvalues(levels(num_reject$method),
                                              c("singleCellHaystack-UMAP"),
                                              c("singleCellHaystack"))
+num_reject <- filter(num_reject,method!="DEseq2")
 
 pdf("./figures/Figure3A_bottomleft_inset.pdf",height = 4,width = 4)
 ggplot(num_reject,aes(x = method,y = num,fill = method))+
@@ -250,7 +251,7 @@ ggrocs <- function(rocs, breaks = seq(0,1,0.1), legendTitel = "Legend") {
   if (length(rocs) == 0) {
     stop("No ROC objects available in param rocs.")
   } else {
-    require(plyr)
+    # require(plyr)
     # Store all sensitivities and specifivities in a data frame
     # which an be used in ggplot
     RocVals <- plyr::ldply(names(rocs), function(rocName) {
@@ -444,8 +445,8 @@ pdf("./figures/FigureS5_b2_left.pdf",height = 6,width = 6)
 ggplot(data = power_frame2,mapping = aes(x = recall, y = precision))+
   geom_point(aes(color = method, shape = method),
              size = 4,stroke = 1)+
-  scale_x_continuous(limits = c(0.3,1))+
-  scale_y_continuous(limits = c(0.7,1))+
+  scale_x_continuous(limits = c(0,1))+
+  scale_y_continuous(limits = c(0.5,1))+
   geom_function(fun = ~ {1/(2/0.9-1/.x)},color = "grey75",linetype = "dashed")+
   geom_function(fun = ~ {1/(2/0.8-1/.x)},color = "grey75",linetype = "dashed")+
   geom_function(fun = ~ {1/(2/0.7-1/.x)},color = "grey75",linetype = "dashed")+
@@ -493,8 +494,8 @@ pdf("./figures/Figure3A_bottomright.pdf",height = 4,width = 3.5)
 ggplot(data = power_frame2,mapping = aes(x = recall, y = precision))+
   geom_point(aes(color = method, shape = method),
              size = 4,stroke = 1)+
-  scale_x_continuous(limits = c(0.3,1))+
-  scale_y_continuous(limits = c(0.7,1))+
+  scale_x_continuous(limits = c(0,1))+
+  scale_y_continuous(limits = c(0.5,1))+
   coord_trans(y=double_exp())+
   geom_function(fun = ~ {1/(2/0.9-1/.x)},color = "grey75",linetype = "dashed")+
   geom_function(fun = ~ {1/(2/0.8-1/.x)},color = "grey75",linetype = "dashed")+
@@ -517,6 +518,7 @@ num_reject$method <- factor(num_reject$method)
 levels(num_reject$method) <- plyr::mapvalues(levels(num_reject$method),
                                              c("singleCellHaystack-UMAP"),
                                              c("singleCellHaystack"))
+num_reject <- filter(num_reject,method!="DEseq2")
 
 pdf("./figures/Figure3A_bottomright_inset.pdf",height = 4,width = 4)
 ggplot(num_reject,aes(x = method,y = num,fill = method))+
@@ -559,7 +561,7 @@ ggrocs <- function(rocs, breaks = seq(0,1,0.1), legendTitel = "Legend") {
   if (length(rocs) == 0) {
     stop("No ROC objects available in param rocs.")
   } else {
-    require(plyr)
+    # require(plyr)
     # Store all sensitivities and specifivities in a data frame
     # which an be used in ggplot
     RocVals <- plyr::ldply(names(rocs), function(rocName) {
@@ -622,6 +624,6 @@ for (i in 1:6){
                         plot=FALSE, auc.polygon=FALSE, max.auc.polygon=FALSE, grid=TRUE,
                         print.auc=TRUE, show.thres=TRUE)
 }
-pdf("./figures/FigureS6_bottomleft.pdf",width = 6,height = 4)
+pdf("./figures/FigureS6_bottomright.pdf",width = 6,height = 4)
 ggrocs(pROC_list)
 dev.off()
