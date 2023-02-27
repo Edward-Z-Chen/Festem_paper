@@ -223,6 +223,100 @@ ggplot(num_reject,aes(x = method,y = num,fill = method))+
   labs(x = NULL,y = "Number")
 dev.off()
 
+# Figure S6 -- bottom left ---------------------------------------------------
+load("./results/b1_hvggenes.RData")
+pbmc <- readRDS("./results/b1.rds")
+pbmc <- NormalizeData(pbmc)
+pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
+pbmc <- FindVariableFeatures(pbmc,nfeatures = nrow(pbmc))
+hvgvst <- VariableFeatures(pbmc)
+pbmc <- FindVariableFeatures(pbmc,nfeatures = nrow(pbmc),selection.method = "disp")
+hvgdisp <- VariableFeatures(pbmc)
+
+load("./results/b1_silver_standard.RData")
+g1 <- rownames(moran_h)[abs(moran_h[,1])<0.001 & moran_h[,2]>0.05]
+moran_nonh <- moran_nonh[!is.na(moran_nonh[,1]),]
+g2 <- rownames(moran_nonh)[moran_nonh[,1]>0.1]
+g2 <- g2[gene_percent[g2]>0.05]
+## ROC curve (codes modified from https://gist.github.com/charly06/91578196fc615c5a79c7174318be4349#file-ggrocs-r)
+#' Functions plots multiple 'roc' objects into one plot
+#' @param rocs
+#'   A list of 'roc' objects. Every list item has a name.
+#' @param breaks
+#'   A vector of integers representing ticks on the x- and y-axis
+#' @param legentTitel
+#'   A string which is used as legend titel
+ggrocs <- function(rocs, breaks = seq(0,1,0.1), legendTitel = "Legend") {
+  if (length(rocs) == 0) {
+    stop("No ROC objects available in param rocs.")
+  } else {
+    require(plyr)
+    # Store all sensitivities and specifivities in a data frame
+    # which an be used in ggplot
+    RocVals <- plyr::ldply(names(rocs), function(rocName) {
+      if(class(rocs[[rocName]]) != "roc") {
+        stop("Please provide roc object from pROC package")
+      }
+      data.frame(
+        fpr = rev(1-rocs[[rocName]]$specificities),
+        tpr = rev(rocs[[rocName]]$sensitivities),
+        names = rep(rocName, length(rocs[[rocName]]$sensitivities)),
+        stringAsFactors = T
+      )
+    })
+    
+    my.color <- c("#DE2D26","#6A3D9A","#9BA3EB","#4DAF4A","#FF7F00","#C0B236")
+    names(my.color) <- c("Festem","HVGvst","HVGdisp","DUBStepR","devianceFS","trendVar")
+    # aucAvg <- mean(sapply(rocs, "[[", "auc"))
+    auc_tmp <- sapply(rocs, "[[", "auc")
+    
+    rocPlot <- ggplot(RocVals, aes(x = fpr, y = tpr, colour = names)) +
+      # geom_segment(aes(x = 0, y = 1, xend = 1,yend = 0), alpha = 0.5, colour = "gray") + 
+      geom_step() +
+      scale_x_continuous(name = "False Positive Rate (1 - Specificity)",limits = c(0,1), breaks = breaks) + 
+      scale_y_continuous(name = "True Positive Rate (Sensitivity)", limits = c(0,1), breaks = breaks) +
+      theme_pubr() + 
+      coord_equal() + 
+      #annotate("text", x = 0.1, y = 0.1, vjust = 0, label = paste("AUC =",sprintf("%.3f",aucAvg))) +
+      guides(colour = guide_legend(legendTitel)) +
+      theme(axis.ticks = element_line(color = "black"),legend.position = "right")+
+      scale_color_manual(values = my.color,
+                         labels = paste0(names(my.color)," (AUC = ",round(auc_tmp,3),")"))
+    
+    rocPlot
+  }
+}
+
+library(pROC)
+pROC_list <- vector("list",6)
+set.seed(321)
+gene.list <- list(Festem = c(EM,setdiff(rownames(pbmc),EM)[sample(1:(nrow(pbmc)-length(EM)),nrow(pbmc)-length(EM))]),
+                  HVGvst = c(hvgvst,setdiff(rownames(pbmc),hvgvst)[sample(1:(nrow(pbmc)-length(hvgvst)),nrow(pbmc)-length(hvgvst))]),
+                  HVGdisp = c(hvgdisp,setdiff(rownames(pbmc),hvgdisp)[sample(1:(nrow(pbmc)-length(hvgdisp)),nrow(pbmc)-length(hvgdisp))]),
+                  DUBStepR = c(dub,setdiff(rownames(pbmc),dub)[sample(1:(nrow(pbmc)-length(dub)),nrow(pbmc)-length(dub))]),
+                  devianceFS = c(devianceFS,setdiff(rownames(pbmc),devianceFS)[sample(1:(nrow(pbmc)-length(devianceFS)),nrow(pbmc)-length(devianceFS))]),
+                  trendVar = c(trendvar,setdiff(rownames(pbmc),trendvar)[sample(1:(nrow(pbmc)-length(trendvar)),nrow(pbmc)-length(trendvar))]))
+names(pROC_list) <- names(gene.list)
+for (i in 1:6){
+  pROC_list[[i]] <- roc(c(rep(0,length(g1)),rep(1,length(g2))),
+                        # as.numeric(c(g2,g4) %in% gene.list[[i]]),
+                        apply(cbind(c(g1,g2)),1,function(x){
+                          if (x %in% gene.list[[i]]){
+                            which(x==gene.list[[i]])
+                          }else{
+                            length(gene.list[[i]])+1
+                          }
+                        }),
+                        direction = ">",
+                        smoothed = TRUE,
+                        # arguments for plot
+                        plot=FALSE, auc.polygon=FALSE, max.auc.polygon=FALSE, grid=TRUE,
+                        print.auc=TRUE, show.thres=TRUE)
+}
+pdf("./figures/FigureS6_bottomleft.pdf",width = 6,height = 4)
+ggrocs(pROC_list)
+dev.off()
+
 # Figure 3 (A) -- bottom right and Figure S5 right ------------------------------------------------
 ## Summarizing results from various DEG detection methods
 pbmc <- readRDS("./results/b2.rds")
@@ -436,4 +530,98 @@ ggplot(num_reject,aes(x = method,y = num,fill = method))+
         axis.ticks.x=element_blank())+
   guides(color = guide_legend(nrow = 1))+
   labs(x = NULL,y = "Number")
+dev.off()
+
+# Figure S6 -- bottom right ---------------------------------------------------
+load("./results/b2_hvggenes.RData")
+pbmc <- readRDS("./results/b2.rds")
+pbmc <- NormalizeData(pbmc)
+pbmc <- pbmc[,!pbmc@meta.data$celltype%in%c("Hematopoietic stem cell","Megakaryocyte","Plasmacytoid dendritic cell")]
+pbmc <- FindVariableFeatures(pbmc,nfeatures = nrow(pbmc))
+hvgvst <- VariableFeatures(pbmc)
+pbmc <- FindVariableFeatures(pbmc,nfeatures = nrow(pbmc),selection.method = "disp")
+hvgdisp <- VariableFeatures(pbmc)
+
+load("./results/b2_silver_standard.RData")
+g1 <- rownames(moran_h)[abs(moran_h[,1])<0.005 & moran_h[,2]>0.05]
+moran_nonh <- moran_nonh[!is.na(moran_nonh[,1]),]
+g2 <- rownames(moran_nonh)[moran_nonh[,1]>0.1]
+g2 <- g2[gene_percent[g2]>0.05]
+## ROC curve (codes modified from https://gist.github.com/charly06/91578196fc615c5a79c7174318be4349#file-ggrocs-r)
+#' Functions plots multiple 'roc' objects into one plot
+#' @param rocs
+#'   A list of 'roc' objects. Every list item has a name.
+#' @param breaks
+#'   A vector of integers representing ticks on the x- and y-axis
+#' @param legentTitel
+#'   A string which is used as legend titel
+ggrocs <- function(rocs, breaks = seq(0,1,0.1), legendTitel = "Legend") {
+  if (length(rocs) == 0) {
+    stop("No ROC objects available in param rocs.")
+  } else {
+    require(plyr)
+    # Store all sensitivities and specifivities in a data frame
+    # which an be used in ggplot
+    RocVals <- plyr::ldply(names(rocs), function(rocName) {
+      if(class(rocs[[rocName]]) != "roc") {
+        stop("Please provide roc object from pROC package")
+      }
+      data.frame(
+        fpr = rev(1-rocs[[rocName]]$specificities),
+        tpr = rev(rocs[[rocName]]$sensitivities),
+        names = rep(rocName, length(rocs[[rocName]]$sensitivities)),
+        stringAsFactors = T
+      )
+    })
+    
+    my.color <- c("#DE2D26","#6A3D9A","#9BA3EB","#4DAF4A","#FF7F00","#C0B236")
+    names(my.color) <- c("Festem","HVGvst","HVGdisp","DUBStepR","devianceFS","trendVar")
+    # aucAvg <- mean(sapply(rocs, "[[", "auc"))
+    auc_tmp <- sapply(rocs, "[[", "auc")
+    
+    rocPlot <- ggplot(RocVals, aes(x = fpr, y = tpr, colour = names)) +
+      # geom_segment(aes(x = 0, y = 1, xend = 1,yend = 0), alpha = 0.5, colour = "gray") + 
+      geom_step() +
+      scale_x_continuous(name = "False Positive Rate (1 - Specificity)",limits = c(0,1), breaks = breaks) + 
+      scale_y_continuous(name = "True Positive Rate (Sensitivity)", limits = c(0,1), breaks = breaks) +
+      theme_pubr() + 
+      coord_equal() + 
+      #annotate("text", x = 0.1, y = 0.1, vjust = 0, label = paste("AUC =",sprintf("%.3f",aucAvg))) +
+      guides(colour = guide_legend(legendTitel)) +
+      theme(axis.ticks = element_line(color = "black"),legend.position = "right")+
+      scale_color_manual(values = my.color,
+                         labels = paste0(names(my.color)," (AUC = ",round(auc_tmp,3),")"))
+    
+    rocPlot
+  }
+}
+
+library(pROC)
+pROC_list <- vector("list",6)
+set.seed(321)
+gene.list <- list(Festem = c(EM,setdiff(rownames(pbmc),EM)[sample(1:(nrow(pbmc)-length(EM)),nrow(pbmc)-length(EM))]),
+                  HVGvst = c(hvgvst,setdiff(rownames(pbmc),hvgvst)[sample(1:(nrow(pbmc)-length(hvgvst)),nrow(pbmc)-length(hvgvst))]),
+                  HVGdisp = c(hvgdisp,setdiff(rownames(pbmc),hvgdisp)[sample(1:(nrow(pbmc)-length(hvgdisp)),nrow(pbmc)-length(hvgdisp))]),
+                  DUBStepR = c(dub,setdiff(rownames(pbmc),dub)[sample(1:(nrow(pbmc)-length(dub)),nrow(pbmc)-length(dub))]),
+                  devianceFS = c(devianceFS,setdiff(rownames(pbmc),devianceFS)[sample(1:(nrow(pbmc)-length(devianceFS)),nrow(pbmc)-length(devianceFS))]),
+                  trendVar = c(trendvar,setdiff(rownames(pbmc),trendvar)[sample(1:(nrow(pbmc)-length(trendvar)),nrow(pbmc)-length(trendvar))]))
+names(pROC_list) <- names(gene.list)
+for (i in 1:6){
+  pROC_list[[i]] <- roc(c(rep(0,length(g1)),rep(1,length(g2))),
+                        # as.numeric(c(g2,g4) %in% gene.list[[i]]),
+                        apply(cbind(c(g1,g2)),1,function(x){
+                          if (x %in% gene.list[[i]]){
+                            which(x==gene.list[[i]])
+                          }else{
+                            length(gene.list[[i]])+1
+                          }
+                        }),
+                        direction = ">",
+                        smoothed = TRUE,
+                        # arguments for plot
+                        plot=FALSE, auc.polygon=FALSE, max.auc.polygon=FALSE, grid=TRUE,
+                        print.auc=TRUE, show.thres=TRUE)
+}
+pdf("./figures/FigureS6_bottomleft.pdf",width = 6,height = 4)
+ggrocs(pROC_list)
 dev.off()
