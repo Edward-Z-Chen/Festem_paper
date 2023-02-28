@@ -158,3 +158,53 @@ ggplot(marker_exp, aes(x = factor(id,levels = unique(id)),
         axis.ticks.y=element_blank()) +
   ggtitle("")+xlab("") + ylab("Expression Level")
 dev.off()
+
+# Figure 5C ---------------------------------------------------------------
+library(dplyr)
+library(survival)
+library(survminer)
+draw_survival_plot <- function(expression, metadata, title){
+  genedata <- metadata[,c("Sample","Vital","Survival")]
+  genedata <- cbind(genedata,FAM3C_DUSP4 = rowSums(t(expression[c("FAM3C","DUSP4"),metadata$Sample])))
+  genedata <- cbind(genedata,FAM3C_DUSP4_level = genedata$FAM3C_DUSP4>=mean(genedata$FAM3C_DUSP4))
+  
+  genedata <- cbind(genedata,CX3CR1 = t(expression["CX3CR1",metadata$Sample]))
+  genedata <- cbind(genedata,CX3CR1_level = genedata$CX3CR1>=mean(genedata$CX3CR1))
+  genedata <- cbind(genedata,group = NA)
+  for (i in 1:nrow(genedata)){
+    if (genedata$FAM3C_DUSP4_level[i]==T & genedata$CX3CR1_level[i]==T){
+      genedata$group[i] <- 1
+    } else if (genedata$FAM3C_DUSP4_level[i]==T & genedata$CX3CR1_level[i]==F){
+      genedata$group[i] <- 2
+    } else if (genedata$FAM3C_DUSP4_level[i]==F & genedata$CX3CR1_level[i]==T){
+      genedata$group[i] <- 3
+    } else {
+      genedata$group[i] <- 4
+    }
+  }
+  genedata$group <- factor(genedata$group)
+  result <- survival::survfit(Surv(Survival, Vital)~group, data=genedata)
+  p <- survminer::ggsurvplot(result,data = genedata, conf.int=FALSE, pval=TRUE, risk.table=F, 
+                   legend.labs=c("emrahi exhi","emralow exhi","emrahi exlow", "emralow exlow"), legend.title="",  
+                   palette=c("#66BFBF","#E7B800","orchid2", "dodgerblue2"),
+                   title=title,legend = "bottom")
+  return(p)
+}
+
+expression <- read.table("./iCCA_survival/cancerdiscov_expr_matrix.txt",header = T)
+metadata <- read.table("./iCCA_survival/cancerdiscov_clinical.txt",header = T,na.strings = "N/A",sep = "\t")
+metadata$Sample <- paste0("X",metadata$Sample)
+expression <- expression[,colnames(expression)%in%metadata$Sample]
+
+p1 <- draw_survival_plot(expression, metadata, "Jusakul et al. (2017)")
+
+expression <- read.table("./iCCA_survival/cptac_expr_matrix.txt",header = T)
+metadata <- read.table("./iCCA_survival/cptac_clinical.txt",header = T,na.strings = "NA",sep = "\t")
+metadata$Sample <- paste0("X",metadata$Sample)
+metadata <- metadata[metadata$Sample%in%colnames(expression),]
+
+p2 <- draw_survival_plot(expression, metadata, "Dong et al. (2017)")
+
+pdf("./figures/Figure5C.pdf",width = 13.3,height = 6.6)
+arrange_ggsurvplots(list(p1,p2),nrow = 1,ncol = 2)
+dev.off()
