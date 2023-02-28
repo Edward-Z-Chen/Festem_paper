@@ -387,6 +387,8 @@ FC <- data.frame(gene = rownames(FC1),
                  Festem = FC[rownames(FC1),1],
                  devianceFS = FC1[,1],
                  flag = rownames(FC1) %in% zhang_marker[,1])
+
+pdf("./figures/FigureS16B.pdf",width = 4,height = 4)
 ggplot(FC,aes(x = devianceFS, y = Festem, color = flag))+
   geom_point(cex = 2)+geom_abline(slope = 1,intercept = 0)+
   theme_pubr()+
@@ -395,4 +397,69 @@ ggplot(FC,aes(x = devianceFS, y = Festem, color = flag))+
   scale_x_continuous(limits = c(0.5,2.5))+
   scale_y_continuous(limits = c(0.7,2.7))+
   labs(title = "terminal Tex")
+dev.off()
 
+# Figure S17 --------------------------------------------------------------
+load("./results/iCCA_clustering_UMAP.RData")
+nonepi <- readRDS("NonEpi.rds")
+metadata <- nonepi@meta.data
+
+label.tmp <- label.list[[1]]
+levels(label.tmp) <- rank(-summary(label.tmp),ties.method = "first")
+levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),1:22,c("GZMK Tem","MAIT","CD4 T",
+                                                              "CD56dim NK","CD56bright NK","Temra",
+                                                              "B","Macrophage","Classical Monocyte",
+                                                              "Innate lymphoid cells",
+                                                              "Treg","Blood Endothelial Cell",
+                                                              "Myeloid cDC2","FOSB+ T","Plasma",
+                                                              "Terminal Tex",
+                                                              "ISG+ CD8 T-like",
+                                                              "Fibroblast","Myeloid cDC1","Cycling Cell",
+                                                              "Intermediate Monocyte","Lymphatic Endothelial cell"))
+
+my.color <- hue_pal()(22)
+names(my.color) <- 1:22
+my.color[c(3,9)] <- my.color[c(9,3)]
+
+names(my.color) <- plyr::mapvalues(names(my.color),1:22,c("GZMK Tem","MAIT","CD4 T",
+                                                          "CD56dim NK","CD56bright NK","Temra",
+                                                          "B","Macrophage","Classical Monocyte",
+                                                          "Innate lymphoid cells",
+                                                          "Treg","Blood Endothelial Cell",
+                                                          "Myeloid cDC2","FOSB+ T","Plasma",
+                                                          "Terminal Tex",
+                                                          "ISG+ CD8 T-like",
+                                                          "Fibroblast","Myeloid cDC1","Cycling Cell",
+                                                          "Intermediate Monocyte","Lymphatic Endothelial cell"))
+my.color2 <- my.color
+my.color2[-c(6,16,18)] <- "grey50"
+my.color2[c(6,16,18)] <- "black"
+  
+data <- cbind(metadata$Patient,as.vector(label.tmp))
+data <- data.frame(data)
+colnames(data) <- c("Patient","cluster.labels")
+library(dplyr)
+df <- data %>% group_by(Patient) %>% count(cluster.labels) %>% mutate(Percent = n / sum(n)*100)
+df$Percent <- round(df$Percent,1)
+df <- cbind(df,Percent_show = df$Percent)
+df$Percent_show[!(df$cluster.labels %in% c("Temra","Fibroblast","Terminal Tex"))] <- ""
+df$Percent_show[(df$cluster.labels %in% c("Temra","Fibroblast","Terminal Tex"))] <- 
+  paste(df$Percent_show[(df$cluster.labels %in% c("Temra","Fibroblast","Terminal Tex"))],"%")
+my.color <- my.color[names(my.color)%in% c("Terminal Tex","Temra","Fibroblast")]
+my.color2 <- my.color2[names(my.color2)%in% c("Terminal Tex","Temra","Fibroblast")]
+
+pdf("./figures/FigureS17.pdf",width = 8,height = 6)
+filter(df, cluster.labels %in% c("Terminal Tex","Temra","Fibroblast")) %>% 
+  ggplot(aes(y = Patient, x = Percent, fill = cluster.labels,
+             color = cluster.labels),size = 0.5)+
+  geom_bar(stat = "identity")+
+  geom_text(aes(label = Percent_show, x = Percent), 
+            position = position_stack(vjust = 0.5))+
+  coord_flip()+theme_pubr()+
+  labs(y = "patient", x = "Percentage",fill = NULL)+
+  ggtitle("Percentage of each cell type") +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "bottom")+
+  scale_fill_manual(values = my.color)+
+  scale_color_manual(values = my.color2,guide = "none")
+dev.off()
