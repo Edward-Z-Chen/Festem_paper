@@ -92,7 +92,6 @@ load("./results/iCCA_clustering_UMAP.RData")
 gene.names <- gene.list[[1]]
 nonepi <- readRDS("NonEpi.rds")
 nonepi <- NormalizeData(nonepi)
-nonepi <- nonepi[,rownames(metadata)]
 nonepi@active.ident <- factor(label.list[[1]])
 names(nonepi@active.ident) <- colnames(nonepi)
 marker_list <- c("CX3CR1","ZEB2","GZMH","FGFBP2",
@@ -207,4 +206,128 @@ p2 <- draw_survival_plot(expression, metadata, "Dong et al. (2017)")
 
 pdf("./figures/Figure5C.pdf",width = 13.3,height = 6.6)
 arrange_ggsurvplots(list(p1,p2),nrow = 1,ncol = 2)
+dev.off()
+
+# Figure 5E ---------------------------------------------------------------
+expression <- read.table("./iCCA_survival/cptac_expr_matrix.txt",header = T)
+metadata <- read.table("./iCCA_survival/cptac_clinical.txt",header = T,na.strings = "NA",sep = "\t")
+metadata$Sample <- paste0("X",metadata$Sample)
+metadata <- metadata[metadata$Sample%in%colnames(expression),]
+
+genedata <- metadata[,c("Sample","Vital","Survival")]
+genedata <- cbind(genedata,FAM3C_DUSP4 = rowSums(t(expression[c("FAM3C","DUSP4"),metadata$Sample])))
+genedata <- cbind(genedata,FAM3C_DUSP4_level = genedata$FAM3C_DUSP4>=mean(genedata$FAM3C_DUSP4))
+
+genedata <- cbind(genedata,CX3CR1 = t(expression["CX3CR1",metadata$Sample]))
+genedata <- cbind(genedata,CX3CR1_level = genedata$CX3CR1>=mean(genedata$CX3CR1))
+genedata <- cbind(genedata,group = NA)
+for (i in 1:nrow(genedata)){
+  if (genedata$FAM3C_DUSP4_level[i]==T & genedata$CX3CR1_level[i]==T){
+    genedata$group[i] <- 1
+  } else if (genedata$FAM3C_DUSP4_level[i]==T & genedata$CX3CR1_level[i]==F){
+    genedata$group[i] <- 2
+  } else if (genedata$FAM3C_DUSP4_level[i]==F & genedata$CX3CR1_level[i]==T){
+    genedata$group[i] <- 3
+  } else {
+    genedata$group[i] <- 4
+  }
+}
+genedata$group <- factor(genedata$group)
+genedata <- cbind.data.frame(genedata,POSTN = t(expression["POSTN",]))
+genedata <- cbind(genedata,POSTN_level = genedata$POSTN>=mean(genedata$POSTN))
+
+result <- survfit(Surv(Survival, Vital)~POSTN_level, data=genedata[genedata$group==3,])
+p1 <- ggsurvplot(result, conf.int=F, pval=TRUE, risk.table=F, 
+                 legend.labs=c("Low","High"), legend.title="POSTN",  
+                 palette=c("orchid2","#E7B800"),
+                 title="emrahiexlow in Dong et al. (2017)",legend = "bottom")
+
+result <- survfit(Surv(Survival, Vital)~POSTN_level, data=genedata[genedata$group==1,])
+p2 <- ggsurvplot(result, conf.int=F, pval=TRUE, risk.table=F, 
+                 legend.labs=c("Low","High"), legend.title="POSTN",  
+                 palette=c("orchid2","#E7B800"),
+                 title="emrahiexhi in Dong et al. (2017)",legend = "bottom")
+
+pdf("./figures/Figure5E.pdf",width = 13.3,height = 6.6)
+arrange_ggsurvplots(list(p1,p2),nrow = 1,ncol = 2)
+dev.off()
+
+
+# Figure S14 --------------------------------------------------------------
+nonepi <- readRDS("NonEpi.rds")
+nonepi <- NormalizeData(nonepi)
+marker_list <- c("GNLY", "NKG7", "CCL5", "CD247","GZMB", # CD8 T
+                 "EOMES","GZMK","GZMA","CCL5","GZMH","IL32","CCL4","HLA-DRB1","HLA-DPA1","COTL1","HLA-DQA1", # GZMK Tem
+                 #"CMC1","TRAT1","DTHD1","PIK3R1","CRTAM", # GZMK early Tem
+                 "SLC4A10","KLRB1","CCR6","DPP4","LTK", "NCR3",#MAIT https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8363247/  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6506535/
+                 "IL7R","CCR7","CD27","SELL","TCF7","CD3E", # CD4 T
+                 "NKG7", "GNLY", "CD247","GZMB", #NK
+                 "NCAM1", # CD56dim NK (CD56=NCAM1)
+                 "TNFSF10","KLRC1", # CD56bright NK
+                 "CX3CR1","KLF2","ZEB2","FGFBP2","FCGR3A","GNLY","C1orf21", # Temra
+                 "MS4A1", "CD79A", "CD37", # B
+                 "CD68","CD14","CD163","ITGAM","ITGAX","IFIT1", # Macrophage
+                 "CD14", "LYZ", "S100A9", #CD14 monocyte
+                 "KLRB1","KRT81","TNFRSF18","KRT86","KLRC2","AREG", # Innate lymphoid cells https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8294935/ (ILC)
+                 "IL2RA","CD4","FOXP3",# T reg
+                 "CLDN5", "PECAM1", "CD34", "FLT1", "VWF", "ENG", "CDH5", # endothelial
+                 "JAM2","HLA-DRB1","MCAM","SPARCL1", # blood endothelial cell
+                 "CD1C","ITGAX","ITGAM","SIRPA","LILRA2","CLEC4A","CLEC10A", # myeloid cDC2
+                 "EGR1","CDC14A","FOSB", #FOSB+ T
+                 "SDC1","CD38","CD27","MZB1","SDC1","CD79A","IGHG1","IGKC","JCHAIN", # plasma
+                 "CCL3","CCL20","STMN1","FABP5","TNFRSF9","TNFRSF18","FAM3C","DUSP4", # Terminal Tex
+                 "STAT1","IRF7","IFI44L","MX1","IFI6","ISG15", # ISG+ CD8 T
+                 "POSTN","COL1A2", "FAP", "DCN", "COL3A1", "COL6A1", "COL1A1", # Fibroblast
+                 "CLEC9A","CADM1","XCR1","BTLA","DPP4", # Myeloid cDC1
+                 "MKI67","TOP2A", # Cycling cell
+                 "FCGR3A","CD14","CD86", "S100A10", "IFI30","HLA-DRB5","GBP4", # intermediate monocyte https://www.frontiersin.org/articles/10.3389/fimmu.2019.02035/full (reference 3-5)
+                 "PROX1","COLEC12","CCL21" # lymphatic endothelial cell
+)
+marker_list <- unique(marker_list)
+label.tmp <- label.list[[1]]
+levels(label.tmp) <- rank(-summary(label.tmp),ties.method = "first")
+levels(label.tmp) <- plyr::mapvalues(levels(label.tmp),1:22,c("GZMK Tem","MAIT","CD4 T",
+                                                              "CD56dim NK","CD56bright NK","Temra",
+                                                              "B","Macrophage","Classical Monocyte",
+                                                              "Innate lymphoid cells",
+                                                              "Treg","Blood Endothelial Cell",
+                                                              "Myeloid cDC2","FOSB+ T","Plasma",
+                                                              "Terminal Tex",
+                                                              "ISG+ CD8 T-like",
+                                                              "Fibroblast","Myeloid cDC1","Cycling Cell",
+                                                              "Intermediate Monocyte","Lymphatic Endothelial cell"))
+label.tmp <- factor(label.tmp,levels = rev(levels(label.tmp)))
+nonepi@active.ident <- label.tmp
+nonepi <- ScaleData(nonepi,features = marker_list)
+
+pdf("./figures/FigureS14.pdf",width = 24,height = 8)
+DotPlot(nonepi, features = marker_list, cols = c("blue", "red"), 
+        dot.scale = 8,idents = levels(label.tmp))+
+  theme(axis.text.x = element_text(angle = 45,hjust = 1))
+dev.off()
+
+# Figure S15 --------------------------------------------------------------
+load("./results/iCCA_clustering_UMAP.RData")
+for (i in 1:6){
+  levels(label.list[[i]]) <- 1:nlevels(label.list[[i]])
+  my.color <- hue_pal()(nlevels(label.list[[i]]))
+  names(my.color) <- (1:nlevels(label.list[[i]]))
+  umap.tmp <- umap.for.plot(umap.list[[1]],label.list[[i]])
+  
+  class_avg <- umap.tmp %>%
+    group_by(cluster) %>%
+    summarise(
+      UMAP_1 = median(UMAP_1),
+      UMAP_2 = median(UMAP_2)
+    )
+  
+  plots.list[[i]] <- ggplot(umap.tmp, aes(x=UMAP_1, y=UMAP_2, color=cluster)) + 
+    geom_scattermore(pointsize = 0.5) + theme_pubr()+
+    theme(legend.position="none",text = element_text(size = 10)) +
+    geom_text(aes(x=UMAP_1,y = UMAP_2,label = cluster), data = class_avg,inherit.aes = F, color = "black",fontface = "bold",size = 3)+
+    labs(title = names(label.list)[i])+scale_color_manual(values = my.color,name = "Clusters")
+}
+
+pdf("./figures/FigureS15.pdf",width = 6,height = 9)
+ggarrange(plotlist = plots.list,ncol = 2,nrow = 3,align = "hv")
 dev.off()
