@@ -14,5 +14,5 @@ cl <- makeCluster(getOption("cl.cores", 20))
 nonepi.gene.allocation <- parApply(cl,nonepi@assays$RNA@data[gene.names,], 1, 
                               type_allocate, type = factor(nonepi@active.ident),
                               sig.level = 0.05)
-save(nonepi.gene.allocation,file = "./results/marker_allocation.RData")
+save(nonepi.gene.allocation,file = "./results/iCCA_marker_allocation.RData")
 stopCluster(cl)
