@@ -331,3 +331,68 @@ for (i in 1:6){
 pdf("./figures/FigureS15.pdf",width = 6,height = 9)
 ggarrange(plotlist = plots.list,ncol = 2,nrow = 3,align = "hv")
 dev.off()
+
+# Figure S16 --------------------------------------------------------------
+## Figure S16A --------------------------------------------------------------
+library(ggalluvial)
+library(tidyverse)
+library(scales)
+my.color <- hue_pal()(22)
+names(my.color) <- 1:22
+my.color[c(3,9)] <- my.color[c(9,3)]
+
+load("./results/iCCA_clustering_UMAP.RData")
+label_data <- label.list[[1]]
+label_data <- data.frame(label_data)
+label_data <- cbind.data.frame(label_data,label.list[[5]])
+label_data <- cbind.data.frame(label_data,1)
+colnames(label_data) <- c("EM","devianceFS","freq")
+label_data <- filter(label_data,devianceFS %in% c(14,6))
+label_data$EM <- as.numeric(label_data$EM)
+label_data$devianceFS <- as.numeric(label_data$devianceFS)
+label_data[!label_data$EM %in% c(1,2,4,6,16),"EM"] <- "other" 
+label_data$EM <- factor(label_data$EM,levels = c(1,2,4,6,16,"other"))
+
+pdf("./figures/FigureS16A.pdf",width = 4,height = 6)
+ggplot(data = label_data,
+       aes(axis2 = get("devianceFS"), axis1 = EM, 
+           y = freq)) +
+  geom_alluvium(aes(fill = EM)) +
+  geom_stratum() +
+  geom_text(stat = "stratum",
+            aes(label = after_stat(stratum))) +
+  scale_x_discrete(limits = c("Festem", "devianceFS"),
+                   expand = c(0.15, 0.05)) +
+  # ggfittext::geom_fit_text(stat = "stratum") +
+  theme_void()+theme(legend.position = "none")+
+  scale_fill_manual(values = my.color)
+dev.off()
+
+## Figure S16B -------------------------------------------------------------
+load("./results/iCCA_clustering_UMAP.RData")
+load("./results/iCCA_marker_allocation.RData")
+nonepi <- readRDS("NonEpi.rds")
+nonepi <- NormalizeData(nonepi)
+nonepi <- AddMetaData(nonepi,label.list[[1]],"Festem")
+nonepi <- AddMetaData(nonepi,label.list[[5]],"devianceFS")
+gene.names <- colnames(nonepi.gene.allocation)[nonepi.gene.allocation["15",] %in% c("A","B")]
+FC <- FoldChange(nonepi,ident.1 = 14,ident.2 = c(0,2),group.by = "Festem",
+                  features = gene.names)
+FC <- FC[order(FC$avg_log2FC,decreasing = T),]
+FC1 <- FoldChange(nonepi,ident.1 = 14,ident.2 = c(0,2),group.by = "devianceFS",
+                  features = rownames(FC)[1:30])
+
+zhang_marker <- read.csv("./results/zhang_terminalTex.csv")
+FC <- data.frame(gene = rownames(FC1),
+                 Festem = FC[rownames(FC1),1],
+                 devianceFS = FC1[,1],
+                 flag = rownames(FC1) %in% zhang_marker[,1])
+ggplot(FC,aes(x = devianceFS, y = Festem, color = flag))+
+  geom_point(cex = 2)+geom_abline(slope = 1,intercept = 0)+
+  theme_pubr()+
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "none")+
+  scale_x_continuous(limits = c(0.5,2.5))+
+  scale_y_continuous(limits = c(0.7,2.7))+
+  labs(title = "terminal Tex")
+
