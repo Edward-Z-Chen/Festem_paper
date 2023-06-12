@@ -4,6 +4,7 @@ library(ggpubr)
 library(tidyverse)
 library(scales)
 library(RColorBrewer)
+library(getopt)
 my.color <- hue_pal()(17)
 names(my.color) <- 1:17
 tsne.for.plot <- function(tsne,cluster){
@@ -15,7 +16,14 @@ if (!file.exists("./figures")){
   dir.create("./figures")
 }
 
+spec <- matrix(
+  c("all_analysis", "a", 0,"logical", "Perform all analysis",
+  ),
+  byrow=TRUE, ncol=5)
+opt <- getopt(spec=spec)
+
 # Figure 3 (A) -- top right and Figure S5 second from top ------------------------------------------------
+if (!is.null(opt$all_analysis)){
 ## Summarizing results from various DEG detection methods
 ifnb <- readRDS("./results/ifnb_ctrl.rds")
 results <- matrix(nrow = nrow(ifnb),ncol = 19,
@@ -81,7 +89,9 @@ tn_test <- as.matrix(tn_test)
 tn_test <- apply(tn_test,1,function(x){min(x)*length(x)})
 results[,"TN_test"] <- p.adjust(tn_test,"BH")
 save(results,file = "./results/ifnb_ctrl_DEG_results.RData")
-
+} else{
+  load("./results/ifnb_ctrl_DEG_results.RData")
+}
 ## Figure S5 second from top (left) -----------------------------------------------------------
 calc_house_percent <- function(DEG_list,house_list){
   sum(house_list%in%DEG_list)/length(DEG_list)

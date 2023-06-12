@@ -369,6 +369,7 @@ ggplot(data = label_data,
 dev.off()
 
 ## Figure S16B -------------------------------------------------------------
+library(ggrepel)
 load("./results/iCCA_clustering_UMAP.RData")
 load("./results/iCCA_marker_allocation.RData")
 nonepi <- readRDS("NonEpi.rds")
@@ -376,7 +377,7 @@ nonepi <- NormalizeData(nonepi)
 nonepi <- AddMetaData(nonepi,label.list[[1]],"Festem")
 nonepi <- AddMetaData(nonepi,label.list[[5]],"devianceFS")
 gene.names <- colnames(nonepi.gene.allocation)[nonepi.gene.allocation["15",] %in% c("A","B")]
-FC <- FoldChange(nonepi,ident.1 = 14,ident.2 = c(0,2),group.by = "Festem",
+FC <- FoldChange(nonepi,ident.1 = 15,ident.2 = c(0,2),group.by = "Festem",
                   features = gene.names)
 FC <- FC[order(FC$avg_log2FC,decreasing = T),]
 FC1 <- FoldChange(nonepi,ident.1 = 14,ident.2 = c(0,2),group.by = "devianceFS",
@@ -387,16 +388,25 @@ FC <- data.frame(gene = rownames(FC1),
                  Festem = FC[rownames(FC1),1],
                  devianceFS = FC1[,1],
                  flag = rownames(FC1) %in% zhang_marker[,1])
+FC <- cbind(FC,ratio = abs(FC$Festem / FC$devianceFS))
+FC <- FC[order(FC$ratio,decreasing = T),]
+FC$gene <- factor(FC$gene,levels = FC$gene)
 
 pdf("./figures/FigureS16B.pdf",width = 4,height = 4)
-ggplot(FC,aes(x = devianceFS, y = Festem, color = flag))+
-  geom_point(cex = 2)+geom_abline(slope = 1,intercept = 0)+
+ggplot(FC,aes(x = gene, y = ratio, color = flag))+
+  geom_point(cex = 2)+
+  geom_abline(slope = 0,intercept = 1,color = "red",linetype = "dashed")+
   theme_pubr()+
   theme(plot.title = element_text(hjust = 0.5),
-        legend.position = "none")+
-  scale_x_continuous(limits = c(0.5,2.5))+
-  scale_y_continuous(limits = c(0.7,2.7))+
-  labs(title = "terminal Tex")
+        legend.position = "none",
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())+
+  scale_color_manual(values = c("TRUE"="#F8766D","FALSE"="#00BFC4"))+
+  geom_text_repel(data = subset(FC, flag=="TRUE"), aes(label = gene,color = "black"), 
+                  box.padding = unit(0.45, "lines"),direction = "x") +
+  # scale_x_continuous(limits = c(0.5,2.5))+
+  # scale_y_continuous(limits = c(0.7,2.7))+
+  labs(title = "terminal Tex",x = NULL)
 dev.off()
 
 # Figure S17 --------------------------------------------------------------
