@@ -17,7 +17,7 @@ if (!file.exists("./figures")){
 }
 
 spec <- matrix(
-  c("all_analysis", "a", 0,"logical", "Perform all analysis",
+  c("all_analysis", "a", 0,"logical", "Perform all analysis"
   ),
   byrow=TRUE, ncol=5)
 opt <- getopt(spec=spec)
