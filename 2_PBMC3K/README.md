@@ -14,7 +14,7 @@
 
 ## Prerequisite
 
-- Download preprocessed data from xxx (recommanded) and place it under the **"results"** folder. Then start the analysis from script 2.2. OR download the original data from https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz and start the analysis from script 2.1.
+- Download preprocessed data *pbmc3k.rds* from https://doi.org/10.5281/zenodo.8185811 (recommanded) and place it under the **"results"** folder. Then start the analysis from script 2.2. OR download the original data from https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz and start the analysis from script 2.1.
 - Download housekeeping gene list from https://housekeeping.unicamp.br/Housekeeping_GenesHuman.RData and place it in **this** folder.
 
 ## Dependency
