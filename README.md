@@ -1,5 +1,5 @@
-# Festem
-Directly selecting differentially expressed genes for single-cell clustering analyses.
+# Codes for paper "Directly selecting differentially expressed genes for single-cell clustering analyses".
+Including pre-release version of Festem.
 
 
 To install EMDE (a pre-release version of Festem), download EMDE_V0.zip and execute:
