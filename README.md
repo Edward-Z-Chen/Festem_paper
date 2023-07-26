@@ -1,4 +1,4 @@
-# Codes for paper "Directly selecting differentially expressed genes for single-cell clustering analyses".
+# Codes for "Directly selecting differentially expressed genes for single-cell clustering analyses".
 Including pre-release version of Festem.
 
 
