@@ -1,4 +1,4 @@
-# Analysis of the IFNB dataset
+# Analysis of the IFNB dataset (Kang dataset)
 
 - 4.1 Preprocessing and pre-clustering. Sequencing data should be first downloaded from xxx and placed in this folder. Sequencing data was downloaded from https://hub.docker.com/r/jinmiaochenlab/batch-effect-removal-benchmarking (dataset 5).
 - 4.2 Run Festem. Cost 124.8 and 128.3 seconds (wall clock time) for each batch with 12 cores.
