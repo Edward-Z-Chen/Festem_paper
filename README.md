@@ -1,5 +1,5 @@
 # Festem
-A Differentially Expressed Gene Analysis and Feature Selection Method Without Need of Precise Clustering Labels
+Directly selecting differentially expressed genes for single-cell clustering analyses.
 
 **TO DO**
 
