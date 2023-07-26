@@ -14,7 +14,7 @@ Song, G., Shi, Y., Meng, L. et al. Single-cell transcriptomic analysis suggests 
 
 ## Prerequisite
 
-- Download the preprocessed data from xxx
+- Download the preprocessed data NonEpi.rds from https://doi.org/10.5281/zenodo.8185811.
 
 ## Dependency
 
