@@ -1,6 +1,6 @@
 # Analysis of the Zheng dataset
 
-- 4.1 Preprocessing and pre-clustering. Sequencing data should be first downloaded from xxx and placed in this folder. Sequencing data was orignially downloaded from https://hub.docker.com/r/jinmiaochenlab/batch-effect-removal-benchmarking (dataset 5).
+- 4.1 Preprocessing and pre-clustering. Sequencing data should be first downloaded from https://doi.org/10.5281/zenodo.8185811 and placed in this folder. Sequencing data was orignially downloaded from https://hub.docker.com/r/jinmiaochenlab/batch-effect-removal-benchmarking (dataset 5).
 - 4.2 Run Festem. Cost 124.8 and 128.3 seconds (wall clock time) for each batch with 12 cores.
 - 4.3 Run competing DEG detection methods.
 - 4.4 Run TN test.
@@ -19,7 +19,7 @@ Tran, H., Ang, K.S., Chevrier, M., Zhang, X., Lee, N.Y., Goh, M., & Chen, J. A b
 
 ## Prerequisite
 
-- Download the preprocessed data from xxx
+- Download data from https://doi.org/10.5281/zenodo.8185811.
 
 - Download housekeeping gene list from https://housekeeping.unicamp.br/Housekeeping_GenesHuman.RData and place it in **this** folder.
 
