@@ -28,3 +28,15 @@ Vovk, V. & Wang, R. Combining P-Values Via Averaging. Political Methods: Quantit
 Apart from packages listed in "1_Simulation", the following R packages are also needed:
 
 SeuratData==0.2.1, Harmony==0.1.0, plyr==1.8.6, pROC==1.17.0.1, ggsci==2.9, cowplot==1.1.1, ggalluvial==0.12.3
+
+## Code for one-line analysis
+
+For convenience, we provide an R script to combine all analysis pipelines concerning our method, Festem, used in IFNB dataset (Kang dataset).
+```
+Rscript run_analysis.R
+```
+
+If you want to perform the competing methods mentioned in the paper, please use the -a flag. However, this may need several hours to finish.
+```
+Rscript run_analysis.R -a
+```
