@@ -30,7 +30,10 @@ Competing feature selection methods use the following R packages:
 
 Most of the above packages can be installed from CRAN and bioconductor. 
 
-For EMDE (a preview version of Festem), install from !!!(.tar.gz). 
+For EMDE (a pre-release version of Festem), install from EMDE_V0.zip. 
+```
+install.packages("EMDE_V0.zip",repo=NULL)
+```
 
 For lcmix, install from R-Forge:
 ```
