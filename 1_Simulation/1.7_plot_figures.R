@@ -29,7 +29,7 @@ my_shape2 <- c(16,15,17,18,rep(16,5))
 names(my_shape2) <- names(my_color2)
 
 
-# Figure 2 (A)-(C) & Figure S3 (A.3)-(D.3) --------------------------------
+# Figure 2 (A),(C),(E) & Figure S3 (E),(G) & Figure S4 (E),(G) --------------------------------
 load("./results/NB_400DE_5type_DEG.RData")
 adjpvalue.list <- adjpvalue.list[-c(1,10,12,14)]
 names(adjpvalue.list)[c(1,9:11)] <- c("Festem_5g",
@@ -75,7 +75,7 @@ deg_frame2 <- cbind(deg_frame2,
                     recall = aggregate(recall ~ method,deg_frame,mean)[,2],
                     F_score = aggregate(F_score ~ method,deg_frame,mean)[,2])
 
-## Figure S3 (C.3) ---------------------------------------------------------
+## Figure S3 (E) ---------------------------------------------------------
 ggplot(data = deg_frame2,mapping = aes(x = recall, y = precision))+
   geom_point(aes(color = method, shape = method),
              size = 4,stroke = 1)+
@@ -97,7 +97,7 @@ ggplot(data = deg_frame2,mapping = aes(x = recall, y = precision))+
   guides(color = guide_legend(nrow = 4))
 
 
-## Figure 2 (C) ------------------------------------------------------------
+## Figure 2 (E) ------------------------------------------------------------
 deg_frame2 <- deg_frame2[c(2,5,7,9,10,11,13,14),]
 deg_frame2$method <- as.character(deg_frame2$method)
 deg_frame2[c(1,7),1] <- c("Festem","singleCellHaystack")
@@ -125,7 +125,7 @@ ggplot(data = deg_frame2,mapping = aes(x = recall, y = precision))+
   guides(color = guide_legend(nrow = 2))
 
 
-## Figure S3 (D.3) ---------------------------------------------------------
+## Figure S3 (G) ---------------------------------------------------------
 time_plot <- apply(time.mat,2,mean,na.rm = T)/60
 time_plot <- data.frame(method = names(adjpvalue.list),
                         time = time_plot,
@@ -147,7 +147,7 @@ ggplot(data = time_plot,mapping = aes(x = memory, y = time))+
   labs(x = "Memory (GiB)", y = "Time (min)")
 
 
-## Figure S3 (A.3) ---------------------------------------------------------
+## Figure S4 (E) ---------------------------------------------------------
 load("./results/NB_400DE_5type_FS.RData")
 FS.ARI.frame <- FS.ARI.frame[,c(1,7:9,2:6)]
 colnames(FS.ARI.frame)[1:4] <- paste0("Festem_",c("5g","3g","7g","9g"))
@@ -172,7 +172,7 @@ ggplot(data = FS_frame,mapping = aes(x = SI, y = ARI))+
   grids("xy",linetype = "dashed",color = "grey75")+
   theme(panel.grid.minor = element_blank())
 
-## Figure 2 (B) ------------------------------------------------------------  
+## Figure 2 (C) ------------------------------------------------------------  
 FS_frame <- FS_frame[c(1,5:9),]
 FS_frame$method <- as.character(FS_frame$method)
 FS_frame$method[1] <- "Festem"
@@ -191,7 +191,7 @@ ggplot(data = FS_frame,mapping = aes(x = SI, y = ARI))+
   grids("xy",linetype = "dashed",color = "grey75")+
   theme(panel.grid.minor = element_blank())
 
-## Figure S3 (B.3) ---------------------------------------------------------
+## Figure S4 (G) ---------------------------------------------------------
 FS.time.mat <- FS.time.mat[,c(1,7:9,2:6)]
 colnames(FS.time.mat)[1:4] <- paste0("Festem_",c("5g","3g","7g","9g"))
 peak.memory.usage <- peak.memory.usage[,c(2,11,13,15,18:22)]
@@ -228,7 +228,7 @@ for (i in 1:length(plots.list)){
 }
 ggarrange(plotlist = plots.list[1:6],nrow = 2,ncol = 3,align = "hv")
 
-# Figure 2 (D)-(F) & Figure S3 (A.4)-(D.4) --------------------------------
+# Figure 2 (B),(D),(F) & Figure S3 (F),(H) & Figure S4 (F),(H) --------------------------------
 load("./results/NB_200DE_5type_DEG.RData")
 adjpvalue.list <- adjpvalue.list[-c(1,10,12,14)]
 names(adjpvalue.list)[c(1,9:11)] <- c("Festem_5g",
@@ -274,7 +274,7 @@ deg_frame2 <- cbind(deg_frame2,
                     recall = aggregate(recall ~ method,deg_frame,mean)[,2],
                     F_score = aggregate(F_score ~ method,deg_frame,mean)[,2])
 
-## Figure S3 (C.4) ---------------------------------------------------------
+## Figure S3 (F) ---------------------------------------------------------
 ggplot(data = deg_frame2,mapping = aes(x = recall, y = precision))+
   geom_point(aes(color = method, shape = method),
              size = 4,stroke = 1)+
@@ -324,7 +324,7 @@ ggplot(data = deg_frame2,mapping = aes(x = recall, y = precision))+
   guides(color = guide_legend(nrow = 2))
 
 
-## Figure S3 (D.4) ---------------------------------------------------------
+## Figure S3 (H) ---------------------------------------------------------
 time_plot <- apply(time.mat,2,mean,na.rm = T)/60
 time_plot <- data.frame(method = names(adjpvalue.list),
                         time = time_plot,
@@ -346,7 +346,7 @@ ggplot(data = time_plot,mapping = aes(x = memory, y = time))+
   labs(x = "Memory (GiB)", y = "Time (min)")
 
 
-## Figure S3 (A.4) ---------------------------------------------------------
+## Figure S4 (F) ---------------------------------------------------------
 load("./results/NB_200DE_5type_FS.RData")
 FS.ARI.frame <- FS.ARI.frame[,c(1,7:9,2:6)]
 colnames(FS.ARI.frame)[1:4] <- paste0("Festem_",c("5g","3g","7g","9g"))
@@ -371,7 +371,7 @@ ggplot(data = FS_frame,mapping = aes(x = SI, y = ARI))+
   grids("xy",linetype = "dashed",color = "grey75")+
   theme(panel.grid.minor = element_blank())
 
-## Figure 2 (E) ------------------------------------------------------------  
+## Figure 2 (D) ------------------------------------------------------------  
 FS_frame <- FS_frame[c(1,5:9),]
 FS_frame$method <- as.character(FS_frame$method)
 FS_frame$method[1] <- "Festem"
@@ -390,7 +390,7 @@ ggplot(data = FS_frame,mapping = aes(x = SI, y = ARI))+
   grids("xy",linetype = "dashed",color = "grey75")+
   theme(panel.grid.minor = element_blank())
 
-## Figure S3 (B.4) ---------------------------------------------------------
+## Figure S4 (H) ---------------------------------------------------------
 FS.time.mat <- FS.time.mat[,c(1,7:9,2:6)]
 colnames(FS.time.mat)[1:4] <- paste0("Festem_",c("5g","3g","7g","9g"))
 peak.memory.usage <- peak.memory.usage[,c(2,11,13,15,18:22)]
@@ -413,7 +413,7 @@ ggplot(data = time_plot,mapping = aes(x = memory, y = time))+
   theme(panel.grid.minor = element_blank())+
   labs(x = "Memory (GiB)", y = "Time (min)")
 
-## Figure 2 (D) ------------------------------------------------------------
+## Figure 2 (B) ------------------------------------------------------------
 for (i in 1:length(plots.list)){
   data_plot <- plots.list[[i]]$data
   data_plot$cluster <- factor(c(rep(1,1500),rep(2,375),rep(3,375),rep(4,375),rep(5,375)))
@@ -442,7 +442,7 @@ names(my_color2) <- c("Festem_2g","Festem_3g","Festem_4g","Festem_5g","HVGvst",
 my_shape2 <- c(16,15,17,18,rep(16,5))
 names(my_shape2) <- names(my_color2)
 
-# Figure S2 (A)-(C) & Figure S3 (A.1)-(D.1) --------------------------------
+# Figure S2 (A),(C),(E) & Figure S3 (A),(C) & Figure S4 (A),(C) --------------------------------
 load("./results/NB_400DE_2type_DEG.RData")
 adjpvalue.list <- adjpvalue.list[-c(1,10,12,14)]
 names(adjpvalue.list)[c(1,9:11)] <- c("Festem_2g",
@@ -488,7 +488,7 @@ deg_frame2 <- cbind(deg_frame2,
                     recall = aggregate(recall ~ method,deg_frame,mean)[,2],
                     F_score = aggregate(F_score ~ method,deg_frame,mean)[,2])
 
-## Figure S3 (C.1) ---------------------------------------------------------
+## Figure S3 (A) ---------------------------------------------------------
 ggplot(data = deg_frame2,mapping = aes(x = recall, y = precision))+
   geom_point(aes(color = method, shape = method),
              size = 4,stroke = 1)+
@@ -510,7 +510,7 @@ ggplot(data = deg_frame2,mapping = aes(x = recall, y = precision))+
   guides(color = guide_legend(nrow = 4))
 
 
-## Figure S2 (C) ------------------------------------------------------------
+## Figure S2 (E) ------------------------------------------------------------
 deg_frame2 <- deg_frame2[c(2,5,7,9,10,11,13,14),]
 deg_frame2$method <- as.character(deg_frame2$method)
 deg_frame2[c(1,7),1] <- c("Festem","singleCellHaystack")
@@ -538,7 +538,7 @@ ggplot(data = deg_frame2,mapping = aes(x = recall, y = precision))+
   guides(color = guide_legend(nrow = 2))
 
 
-## Figure S3 (D.1) ---------------------------------------------------------
+## Figure S3 (C) ---------------------------------------------------------
 time_plot <- apply(time.mat,2,mean,na.rm = T)/60
 time_plot <- data.frame(method = names(adjpvalue.list),
                         time = time_plot,
@@ -560,7 +560,7 @@ ggplot(data = time_plot,mapping = aes(x = memory, y = time))+
   labs(x = "Memory (GiB)", y = "Time (min)")
 
 
-## Figure S3 (A.1) ---------------------------------------------------------
+## Figure S4 (A) ---------------------------------------------------------
 load("./results/NB_400DE_2type_FS.RData")
 FS.ARI.frame <- FS.ARI.frame[,c(1,7:9,2:6)]
 colnames(FS.ARI.frame)[1:4] <- paste0("Festem_",c("2g","3g","4g","5g"))
@@ -585,7 +585,7 @@ ggplot(data = FS_frame,mapping = aes(x = SI, y = ARI))+
   grids("xy",linetype = "dashed",color = "grey75")+
   theme(panel.grid.minor = element_blank())
 
-## Figure S2 (B) ------------------------------------------------------------  
+## Figure S2 (C) ------------------------------------------------------------  
 FS_frame <- FS_frame[c(1,5:9),]
 FS_frame$method <- as.character(FS_frame$method)
 FS_frame$method[1] <- "Festem"
@@ -604,7 +604,7 @@ ggplot(data = FS_frame,mapping = aes(x = SI, y = ARI))+
   grids("xy",linetype = "dashed",color = "grey75")+
   theme(panel.grid.minor = element_blank())
 
-## Figure S3 (B.1) ---------------------------------------------------------
+## Figure S4 (C) ---------------------------------------------------------
 FS.time.mat <- FS.time.mat[,c(1,7:9,2:6)]
 colnames(FS.time.mat)[1:4] <- paste0("Festem_",c("2g","3g","4g","5g"))
 peak.memory.usage <- peak.memory.usage[,c(2,11,13,15,18:22)]
@@ -641,7 +641,7 @@ for (i in 1:length(plots.list)){
 }
 ggarrange(plotlist = plots.list[1:6],nrow = 2,ncol = 3,align = "hv")
 
-# Figure S2 (D)-(F) & Figure S3 (A.2)-(D.2) --------------------------------
+# Figure S2 (B),(D),(F) & Figure S3 (B),(D) & Figure S4 (B),(D) --------------------------------
 load("./results/NB_200DE_2type_DEG.RData")
 adjpvalue.list <- adjpvalue.list[-c(1,10,12,14)]
 names(adjpvalue.list)[c(1,9:11)] <- c("Festem_2g",
@@ -687,7 +687,7 @@ deg_frame2 <- cbind(deg_frame2,
                     recall = aggregate(recall ~ method,deg_frame,mean)[,2],
                     F_score = aggregate(F_score ~ method,deg_frame,mean)[,2])
 
-## Figure S3 (C.2) ---------------------------------------------------------
+## Figure S3 (B) ---------------------------------------------------------
 ggplot(data = deg_frame2,mapping = aes(x = recall, y = precision))+
   geom_point(aes(color = method, shape = method),
              size = 5,stroke = 1)+
@@ -737,7 +737,7 @@ ggplot(data = deg_frame2,mapping = aes(x = recall, y = precision))+
   guides(color = guide_legend(nrow = 2))
 
 
-## Figure S3 (D.2) ---------------------------------------------------------
+## Figure S3 (D) ---------------------------------------------------------
 time_plot <- apply(time.mat,2,mean,na.rm = T)/60
 time_plot <- data.frame(method = names(adjpvalue.list),
                         time = time_plot,
@@ -759,7 +759,7 @@ ggplot(data = time_plot,mapping = aes(x = memory, y = time))+
   labs(x = "Memory (GiB)", y = "Time (min)")
 
 
-## Figure S3 (A.2) ---------------------------------------------------------
+## Figure S4 (B) ---------------------------------------------------------
 load("./results/NB_200DE_2type_FS.RData")
 FS.ARI.frame <- FS.ARI.frame[,c(1,7:9,2:6)]
 colnames(FS.ARI.frame)[1:4] <- paste0("Festem_",c("2g","3g","4g","5g"))
@@ -784,7 +784,7 @@ ggplot(data = FS_frame,mapping = aes(x = SI, y = ARI))+
   grids("xy",linetype = "dashed",color = "grey75")+
   theme(panel.grid.minor = element_blank())
 
-## Figure S2 (E) ------------------------------------------------------------  
+## Figure S2 (D) ------------------------------------------------------------  
 FS_frame <- FS_frame[c(1,5:9),]
 FS_frame$method <- as.character(FS_frame$method)
 FS_frame$method[1] <- "Festem"
@@ -803,7 +803,7 @@ ggplot(data = FS_frame,mapping = aes(x = SI, y = ARI))+
   grids("xy",linetype = "dashed",color = "grey75")+
   theme(panel.grid.minor = element_blank())
 
-## Figure S3 (B.2) ---------------------------------------------------------
+## Figure S4 (D) ---------------------------------------------------------
 FS.time.mat <- FS.time.mat[,c(1,7:9,2:6)]
 colnames(FS.time.mat)[1:4] <- paste0("Festem_",c("2g","3g","4g","5g"))
 peak.memory.usage <- peak.memory.usage[,c(2,11,13,15,18:22)]
@@ -826,7 +826,7 @@ ggplot(data = time_plot,mapping = aes(x = memory, y = time))+
   theme(panel.grid.minor = element_blank())+
   labs(x = "Memory (GiB)", y = "Time (min)")
 
-## Figure S2 (D) ------------------------------------------------------------
+## Figure S2 (B) ------------------------------------------------------------
 for (i in 1:length(plots.list)){
   data_plot <- plots.list[[i]]$data
   data_plot$cluster <- factor(c(rep(1,1500),rep(2,375),rep(3,375),rep(4,375),rep(5,375)))

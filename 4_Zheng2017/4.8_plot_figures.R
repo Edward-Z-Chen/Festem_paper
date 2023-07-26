@@ -224,7 +224,7 @@ ggplot(num_reject,aes(x = method,y = num,fill = method))+
   labs(x = NULL,y = "Number")
 dev.off()
 
-# Figure S6 -- bottom left ---------------------------------------------------
+# Figure S7 -- bottom left ---------------------------------------------------
 load("./results/b1_hvggenes.RData")
 pbmc <- readRDS("./results/b1.rds")
 pbmc <- NormalizeData(pbmc)
@@ -314,7 +314,7 @@ for (i in 1:6){
                         plot=FALSE, auc.polygon=FALSE, max.auc.polygon=FALSE, grid=TRUE,
                         print.auc=TRUE, show.thres=TRUE)
 }
-pdf("./figures/FigureS6_bottomleft.pdf",width = 6,height = 4)
+pdf("./figures/FigureS7_bottomleft.pdf",width = 6,height = 4)
 ggrocs(pROC_list)
 dev.off()
 
@@ -534,7 +534,7 @@ ggplot(num_reject,aes(x = method,y = num,fill = method))+
   labs(x = NULL,y = "Number")
 dev.off()
 
-# Figure S6 -- bottom right ---------------------------------------------------
+# Figure S7 -- bottom right ---------------------------------------------------
 load("./results/b2_hvggenes.RData")
 pbmc <- readRDS("./results/b2.rds")
 pbmc <- NormalizeData(pbmc)
@@ -624,6 +624,6 @@ for (i in 1:6){
                         plot=FALSE, auc.polygon=FALSE, max.auc.polygon=FALSE, grid=TRUE,
                         print.auc=TRUE, show.thres=TRUE)
 }
-pdf("./figures/FigureS6_bottomright.pdf",width = 6,height = 4)
+pdf("./figures/FigureS7_bottomright.pdf",width = 6,height = 4)
 ggrocs(pROC_list)
 dev.off()

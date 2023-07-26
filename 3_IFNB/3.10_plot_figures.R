@@ -313,7 +313,61 @@ ggplot(marker_exp, aes(x = factor(id,levels = c("IFNhi CD14 Monocyte","CD14 Mono
   ggtitle("Festem")+xlab("") + ylab("Expression Level")
 dev.off()
 
-## Figure 4G & Figure S11B ----------------------------------------------------------------
+## Figure 4G --------------------------------------------------------------
+library(cowplot)
+ifnb <- readRDS("./results/ifnb_ctrl.rds")
+ifnb <- NormalizeData(ifnb)
+ifnb <- ifnb[,!ifnb@meta.data$seurat_annotations%in%c("Eryth","Mk")]
+marker_list <- c("HSPA1A" ,"HSPB1" ,"HSPA1B" ,"HSPH1" ,
+                 "HSPE1" ,"HSPD1" ,"HSP90AB1" ,"DNAJB1",
+                 "HSP90AA1" ,"DNAJA1","HSPA8")
+ifnb <- ScaleData(ifnb,features = marker_list)
+marker_exp <- data.frame(exp = as.numeric(ifnb@assays$RNA@scale.data[marker_list,plots.list[[1]]$data$cluster=="3"]),
+                         gene = rep(marker_list,sum(plots.list[[1]]$data$cluster=="3")),
+                         id = "CD4 Naive T")
+marker_exp <- rbind(marker_exp,data.frame(exp = as.numeric(ifnb@assays$RNA@scale.data[marker_list,plots.list[[1]]$data$cluster=="2"]),
+                                          gene = rep(marker_list,sum(plots.list[[1]]$data$cluster=="2")),
+                                          id = "CD4 Memory T"))
+marker_exp <- rbind(marker_exp,data.frame(exp = as.numeric(ifnb@assays$RNA@scale.data[marker_list,plots.list[[1]]$data$cluster=="9"]),
+                                          gene = rep(marker_list,sum(plots.list[[1]]$data$cluster=="9")),
+                                          id = "CD8 T"))
+marker_exp <- rbind(marker_exp,data.frame(exp = as.numeric(ifnb@assays$RNA@scale.data[marker_list,plots.list[[1]]$data$cluster=="8"]),
+                                          gene = rep(marker_list,sum(plots.list[[1]]$data$cluster=="8")),
+                                          id = "T Activated"))
+marker_exp <- rbind(marker_exp,data.frame(exp = as.numeric(ifnb@assays$RNA@scale.data[marker_list,plots.list[[1]]$data$cluster=="14"]),
+                                          gene = rep(marker_list,sum(plots.list[[1]]$data$cluster=="14")),
+                                          id = "HSP+ CD4 T"))
+set.seed(321)
+noise <- rnorm(n = nrow(marker_exp)) / 100000
+marker_exp$exp <- marker_exp$exp+noise
+marker_exp$gene <- factor(marker_exp$gene,levels = marker_list)
+
+my.color <- hue_pal()(17)
+names(my.color) <- 1:17
+color <- my.color[c(3,2,9,8,14)]
+names(color) <- unique(marker_exp$id)
+
+pdf("./figures/Figure4G.pdf",width = 4,height = 4)
+ggplot(marker_exp, aes(x = factor(id,levels = unique(id)),
+                       y = exp, fill = id)) +
+  geom_violin(scale = "width", adjust = 0.8, trim = T) +
+  scale_y_continuous(expand = c(0, 0), position="left", labels = function(x)
+    c(rep(x = "", times = length(x)-2), x[length(x) - 1], "")) +
+  facet_grid(rows = vars(gene), scales = "free") +
+  cowplot::theme_cowplot(font_size = 12) +
+  scale_fill_discrete(type = color)+
+  theme(legend.position = "none", panel.spacing = unit(0, "lines"),
+        panel.background = element_rect(fill = NA, color = "black"),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        strip.text.y.right = element_text(angle = 0),
+        axis.text.x = element_text(angle = 45,hjust = 1),
+        axis.text.y=element_blank(),  #remove y axis labels
+        axis.ticks.y=element_blank()) +
+  ggtitle("HSP+ CD4 T (Cluster 12)")+xlab("") + ylab("Expression Level")
+dev.off()
+
+## Figure S11B ----------------------------------------------------------------
 ifnb <- readRDS("./results/ifnb_ctrl.rds")
 ifnb <- NormalizeData(ifnb)
 ifnb <- ifnb[,!ifnb@meta.data$seurat_annotations%in%c("Eryth","Mk")]
@@ -352,11 +406,11 @@ p_stim <-
   labs(title = "Stimulated",color = "IFN score")
 
 
-pdf("./figures/Figure4G&S11B.pdf",width = 7,height = 4)
+pdf("./figures/S11B.pdf",width = 7,height = 4)
 ggarrange(p_ctrl,p_stim,ncol = 2, labels = c("A","B"),common.legend = T,legend = "bottom")
 dev.off()
 
-# Figure S6 -- top right ---------------------------------------------------
+# Figure S7 -- top right ---------------------------------------------------
 load("./results/ifnb_ctrl_hvggenes.RData")
 ifnb <- readRDS("./results/ifnb_ctrl.rds")
 ifnb <- NormalizeData(ifnb)
@@ -446,11 +500,11 @@ for (i in 1:6){
                         plot=FALSE, auc.polygon=FALSE, max.auc.polygon=FALSE, grid=TRUE,
                         print.auc=TRUE, show.thres=TRUE)
 }
-pdf("./figures/FigureS6_topright.pdf",width = 6,height = 4)
+pdf("./figures/FigureS7_topright.pdf",width = 6,height = 4)
 ggrocs(pROC_list)
 dev.off()
 
-# Figure S9 ---------------------------------------------------------------
+# Figure S10 ---------------------------------------------------------------
 load("./results/ifnb_ctrl_clustering_tSNE.RData")
 ifnb <- readRDS("./results/ifnb_ctrl.rds")
 ifnb <- NormalizeData(ifnb)
@@ -486,14 +540,13 @@ label.tmp <- factor(label.tmp,levels = c("T cell:monocyte complex",
                                          ))
 ifnb@active.ident <- label.tmp
 ifnb <- ScaleData(ifnb,features = marker_list)
-pdf("./figures/FigureS9.pdf",width = 15,height = 5)
+pdf("./figures/FigureS10.pdf",width = 15,height = 5)
 DotPlot(ifnb, features = marker_list, cols = c("blue", "red"), 
         dot.scale = 8,idents = levels(label.tmp)) + RotatedAxis()
 dev.off()
 
-# Figure S10 --------------------------------------------------------------
+# Figure S11 --------------------------------------------------------------
 load("./results/ifnb_ctrl_clustering_tSNE.RData")
-## Figure S10A --------------------------------------------------------------
 set.seed(321)
 my.color <- hue_pal()(35)
 names(my.color) <- sample(1:35,size = 35)
@@ -528,96 +581,43 @@ for (i in 1:length(label.list)){
     labs(title = names(label.list)[i])+scale_color_manual(values = my.color,name = "Clusters")
 }
 
-pdf("./figures/FigureS10A.pdf",width = 10, height = 7,onefile = T)
+pdf("./figures/FigureS11.pdf",width = 10, height = 7,onefile = T)
 ggarrange(plotlist = plots.list,nrow = 2,ncol = 3,legend = "none")
 dev.off()
 
-## Figure S10B --------------------------------------------------------------
-load("./results/ifnb_ctrl_resolution_ARI.RData")
-label_ARI_frame <- data.frame()
-for (i in 1:nrow(label_ARI)){
-  label_ARI_frame <- rbind.data.frame(label_ARI_frame,
-                                      data.frame(ARI = label_ARI[i,],
-                                                 reso = 0.1*(1:15)+0.5,
-                                                 method = rep(rownames(label_ARI)[i],15)))
-}
-label_ARI_frame$reso <- factor(label_ARI_frame$reso)
-label_ARI_frame$method <- factor(label_ARI_frame$method)
-label_ARI_frame$ARI <- round(label_ARI_frame$ARI,2)
+# ## Figure S10B --------------------------------------------------------------
+# load("./results/ifnb_ctrl_resolution_ARI.RData")
+# label_ARI_frame <- data.frame()
+# for (i in 1:nrow(label_ARI)){
+#   label_ARI_frame <- rbind.data.frame(label_ARI_frame,
+#                                       data.frame(ARI = label_ARI[i,],
+#                                                  reso = 0.1*(1:15)+0.5,
+#                                                  method = rep(rownames(label_ARI)[i],15)))
+# }
+# label_ARI_frame$reso <- factor(label_ARI_frame$reso)
+# label_ARI_frame$method <- factor(label_ARI_frame$method)
+# label_ARI_frame$ARI <- round(label_ARI_frame$ARI,2)
+# 
+# pdf("./figures/FigureS10B.pdf",width = 8,height = 4)
+# ggplot(data = label_ARI_frame,aes(x = reso,y = method,fill = ARI))+
+#   geom_tile(color = "white",
+#             lwd = 1,
+#             linetype = 1)+theme_pubr()+
+#   scale_y_discrete(limits = c(rownames(label_ARI[-1,])[order(label_ARI[-1,10],decreasing = F)],"Festem"))+
+#   geom_text(aes(x = reso,y = method,label = ARI),color = "black",size = 5,fontface = "bold")+
+#   scale_fill_gradient2(low = "white",mid = "#FCD2D1",high = "#FF5C58",midpoint = 0.5) + 
+#   theme(axis.text.x = element_text(angle = -30),plot.title = element_text(hjust = 0.5),
+#         panel.border = element_blank()) +
+#   guides(fill = guide_legend(reverse = F))+
+#   labs(fill = "Percent",y = NULL,x = "resolution")+
+#   theme(legend.position = "right")+
+#   guides(fill = guide_colourbar(label = T,
+#                                 ticks = T,
+#                                 title = NULL))
+# dev.off()
 
-pdf("./figures/FigureS10B.pdf",width = 8,height = 4)
-ggplot(data = label_ARI_frame,aes(x = reso,y = method,fill = ARI))+
-  geom_tile(color = "white",
-            lwd = 1,
-            linetype = 1)+theme_pubr()+
-  scale_y_discrete(limits = c(rownames(label_ARI[-1,])[order(label_ARI[-1,10],decreasing = F)],"Festem"))+
-  geom_text(aes(x = reso,y = method,label = ARI),color = "black",size = 5,fontface = "bold")+
-  scale_fill_gradient2(low = "white",mid = "#FCD2D1",high = "#FF5C58",midpoint = 0.5) + 
-  theme(axis.text.x = element_text(angle = -30),plot.title = element_text(hjust = 0.5),
-        panel.border = element_blank()) +
-  guides(fill = guide_legend(reverse = F))+
-  labs(fill = "Percent",y = NULL,x = "resolution")+
-  theme(legend.position = "right")+
-  guides(fill = guide_colourbar(label = T,
-                                ticks = T,
-                                title = NULL))
-dev.off()
 
-## Figure S10C --------------------------------------------------------------
-library(cowplot)
-ifnb <- readRDS("./results/ifnb_ctrl.rds")
-ifnb <- NormalizeData(ifnb)
-ifnb <- ifnb[,!ifnb@meta.data$seurat_annotations%in%c("Eryth","Mk")]
-marker_list <- c("HSPA1A" ,"HSPB1" ,"HSPA1B" ,"HSPH1" ,
-                 "HSPE1" ,"HSPD1" ,"HSP90AB1" ,"DNAJB1",
-                 "HSP90AA1" ,"DNAJA1","HSPA8")
-ifnb <- ScaleData(ifnb,features = marker_list)
-marker_exp <- data.frame(exp = as.numeric(ifnb@assays$RNA@scale.data[marker_list,plots.list[[1]]$data$cluster=="3"]),
-                         gene = rep(marker_list,sum(plots.list[[1]]$data$cluster=="3")),
-                         id = "CD4 Naive T")
-marker_exp <- rbind(marker_exp,data.frame(exp = as.numeric(ifnb@assays$RNA@scale.data[marker_list,plots.list[[1]]$data$cluster=="2"]),
-                                          gene = rep(marker_list,sum(plots.list[[1]]$data$cluster=="2")),
-                                          id = "CD4 Memory T"))
-marker_exp <- rbind(marker_exp,data.frame(exp = as.numeric(ifnb@assays$RNA@scale.data[marker_list,plots.list[[1]]$data$cluster=="9"]),
-                                          gene = rep(marker_list,sum(plots.list[[1]]$data$cluster=="9")),
-                                          id = "CD8 T"))
-marker_exp <- rbind(marker_exp,data.frame(exp = as.numeric(ifnb@assays$RNA@scale.data[marker_list,plots.list[[1]]$data$cluster=="8"]),
-                                          gene = rep(marker_list,sum(plots.list[[1]]$data$cluster=="8")),
-                                          id = "T Activated"))
-marker_exp <- rbind(marker_exp,data.frame(exp = as.numeric(ifnb@assays$RNA@scale.data[marker_list,plots.list[[1]]$data$cluster=="14"]),
-                                          gene = rep(marker_list,sum(plots.list[[1]]$data$cluster=="14")),
-                                          id = "HSP+ CD4 T"))
-set.seed(321)
-noise <- rnorm(n = nrow(marker_exp)) / 100000
-marker_exp$exp <- marker_exp$exp+noise
-marker_exp$gene <- factor(marker_exp$gene,levels = marker_list)
-
-my.color <- hue_pal()(17)
-names(my.color) <- 1:17
-color <- my.color[c(3,2,9,8,14)]
-names(color) <- unique(marker_exp$id)
-
-pdf("./figures/FigureS10C.pdf",width = 4,height = 4)
-ggplot(marker_exp, aes(x = factor(id,levels = unique(id)),
-                       y = exp, fill = id)) +
-  geom_violin(scale = "width", adjust = 0.8, trim = T) +
-  scale_y_continuous(expand = c(0, 0), position="left", labels = function(x)
-    c(rep(x = "", times = length(x)-2), x[length(x) - 1], "")) +
-  facet_grid(rows = vars(gene), scales = "free") +
-  cowplot::theme_cowplot(font_size = 12) +
-  scale_fill_discrete(type = color)+
-  theme(legend.position = "none", panel.spacing = unit(0, "lines"),
-        panel.background = element_rect(fill = NA, color = "black"),
-        strip.background = element_blank(),
-        strip.text = element_text(face = "bold"),
-        strip.text.y.right = element_text(angle = 0),
-        axis.text.x = element_text(angle = 45,hjust = 1),
-        axis.text.y=element_blank(),  #remove y axis labels
-        axis.ticks.y=element_blank()) +
-  ggtitle("HSP+ CD4 T (Cluster 12)")+xlab("") + ylab("Expression Level")
-dev.off()
-
-# Figure S11A --------------------------------------------------------------
+# Figure S12A --------------------------------------------------------------
 load("./results/ifnb_stim_clustering_tSNE.RData")
 ifnb_stim <- readRDS("./results/ifnb_stim.rds")
 ifnb_stim <- NormalizeData(ifnb_stim)
@@ -642,7 +642,7 @@ class_avg[,4] <- plyr::mapvalues(class_avg[,4],1:16,c("IFNhi CD14 Monocyte","CD4
                                                       ))
 levels(tsne.tmp$cluster) <- plyr::mapvalues(levels(tsne.tmp$cluster),c(1,5,8,2,10,9,15),c(1,1,1,10,10,15,15))
 
-pdf("./figures/FigureS11A.pdf",width = 4,height = 4)
+pdf("./figures/FigureS12A.pdf",width = 4,height = 4)
 ggplot(tsne.tmp, aes(x=tSNE_1, y=tSNE_2, color=cluster)) + 
   geom_point(cex=0.1) + theme_pubr()+
   theme(legend.position="none",text = element_text(size = 15)) +
@@ -651,8 +651,7 @@ ggplot(tsne.tmp, aes(x=tSNE_1, y=tSNE_2, color=cluster)) +
   labs(title = "Stimulated")+scale_color_manual(values = my.color,name = "Clusters")
 dev.off()
 
-# Figure S12 --------------------------------------------------------------
-## Figure S12A & B --------------------------------------------------------------
+# Figure S13 --------------------------------------------------------------
 ifnb <- SeuratData::LoadData("ifnb")
 ifnb <- NormalizeData(ifnb)
 ifnb <- ifnb[,!ifnb@meta.data$seurat_annotations%in%c("Eryth","Mk")]
@@ -720,95 +719,95 @@ p2 <- ggplot(tsne.tmp, aes(x=tSNE_1, y=tSNE_2, color=cluster)) +
   geom_point(cex=0.1) + theme_pubr()+theme(legend.position="right")+
   scale_color_manual(values = c("C_14" = "red", "S_0" = "lightblue","C_0"="lightgreen"))
 
-pdf("./figures/FigureS12A&B.pdf",width = 12.5,height = 5)
+pdf("./figures/FigureS13.pdf",width = 12.5,height = 5)
 ggarrange(p1,p2,ncol = 2,widths = c(1.1,1))
 dev.off()
 
-## Figure S12C --------------------------------------------------------------
-load("./results/ifnb_ctrl_clustering_tSNE.RData")
+# ## Figure S12C --------------------------------------------------------------
+# load("./results/ifnb_ctrl_clustering_tSNE.RData")
+# 
+# pdf("./figures/FigureS12C.pdf",width = 6,height = 4)
+# list(Festem = gene.list[[1]],devianceFS = gene.list[[5]]) %>%
+#   ggVennDiagram::ggVennDiagram(label_alpha = 0)+
+#   scale_fill_gradient(low = "#F4FAFE", high = "#4981BF")
+# dev.off()
+# 
+# ## Figure S12D -------------------------------------------------------------
+# load("./results/ifnb_ctrl_silver_standard.RData")
+# moran <- rbind(moran_h,moran_nonh)
+# x1 <- moran[setdiff(gene.list[[1]],gene.list[[5]]),]
+# x2 <- moran[setdiff(gene.list[[5]],gene.list[[1]]),]
+# 
+# pdf("./figures/FigureS12D.pdf",width = 4,height = 4)
+# data.frame(name = factor(c(rep("Festem only",nrow(x1)),rep("devianceFS only",nrow(x2))),
+#                          levels = c("Festem only","devianceFS only")),
+#            value = c(x1$observed,x2$observed)) %>%
+#   ggplot( aes(x=name, y=value, fill=name)) +
+#   geom_boxplot() +
+#   scale_fill_manual(values = c("Festem only" = "red","devianceFS only" = "#FF7F00"))+
+#   theme_pubr() +
+#   theme(
+#     legend.position="none",
+#     plot.title = element_text(size=11)
+#   ) +
+#   stat_compare_means()+
+#   xlab("")+ylab("Moran index")
+# dev.off()
+# 
+# ## Figure S12E -------------------------------------------------------------
+# load("./results/ifnb_ctrl_silver_standard.RData")
+# moran <- rbind(moran_h,moran_nonh)
+# x1 <- moran[setdiff(gene.list[[1]],gene.list[[2]]),]
+# x2 <- moran[setdiff(gene.list[[2]],gene.list[[1]]),]
+# 
+# p1 <- data.frame(name = c(rep("Festem only",nrow(x1)),rep("HVGvst only",nrow(x2))),
+#            value = c(x1$observed,x2$observed)) %>%
+#   ggplot( aes(x=name, y=value, fill=name)) +
+#   geom_boxplot() +
+#   scale_fill_manual(values = c("Festem only" = "red","HVGvst only" = "#6A3D9A"))+
+#   theme_pubr() +
+#   theme(
+#     legend.position="none",
+#     plot.title = element_text(size=11)
+#   ) +
+#   stat_compare_means()+
+#   xlab("")+ylab("Moran index")
+# 
+# x1 <- moran[setdiff(gene.list[[1]],gene.list[[3]]),]
+# x2 <- moran[setdiff(gene.list[[3]],gene.list[[1]]),]
+# p2 <- data.frame(name = c(rep("Festem only",nrow(x1)),rep("HVGdisp only",nrow(x2))),
+#                  value = c(x1$observed,x2$observed)) %>%
+#   ggplot( aes(x=name, y=value, fill=name)) +
+#   geom_boxplot() +
+#   scale_fill_manual(values = c("Festem only" = "red","HVGdisp only" = "#9BA3EB"))+
+#   theme_pubr() +
+#   theme(
+#     legend.position="none",
+#     plot.title = element_text(size=11)
+#   ) +
+#   stat_compare_means()+
+#   xlab("")+ylab("Moran index")
+# 
+# x1 <- moran[setdiff(gene.list[[1]],gene.list[[6]]),]
+# x2 <- moran[setdiff(gene.list[[6]],gene.list[[1]]),]
+# p3 <- data.frame(name = c(rep("Festem only",nrow(x1)),rep("trendVar only",nrow(x2))),
+#            value = c(x1$observed,x2$observed)) %>%
+#   ggplot( aes(x=name, y=value, fill=name)) +
+#   geom_boxplot() +
+#   scale_fill_manual(values = c("Festem only" = "red","trendVar only" = "#C0B236"))+
+#   theme_pubr() +
+#   theme(
+#     legend.position="none",
+#     plot.title = element_text(size=11)
+#   ) +
+#   stat_compare_means()+
+#   xlab("")+ylab("Moran index")
+# 
+# pdf("./figures/FigureS12E.pdf",width = 4,height = 12)
+# ggarrange(p1,p2,p3,ncol = 1)
+# dev.off()
 
-pdf("./figures/FigureS12C.pdf",width = 6,height = 4)
-list(Festem = gene.list[[1]],devianceFS = gene.list[[5]]) %>%
-  ggVennDiagram::ggVennDiagram(label_alpha = 0)+
-  scale_fill_gradient(low = "#F4FAFE", high = "#4981BF")
-dev.off()
-
-## Figure S12D -------------------------------------------------------------
-load("./results/ifnb_ctrl_silver_standard.RData")
-moran <- rbind(moran_h,moran_nonh)
-x1 <- moran[setdiff(gene.list[[1]],gene.list[[5]]),]
-x2 <- moran[setdiff(gene.list[[5]],gene.list[[1]]),]
-
-pdf("./figures/FigureS12D.pdf",width = 4,height = 4)
-data.frame(name = factor(c(rep("Festem only",nrow(x1)),rep("devianceFS only",nrow(x2))),
-                         levels = c("Festem only","devianceFS only")),
-           value = c(x1$observed,x2$observed)) %>%
-  ggplot( aes(x=name, y=value, fill=name)) +
-  geom_boxplot() +
-  scale_fill_manual(values = c("Festem only" = "red","devianceFS only" = "#FF7F00"))+
-  theme_pubr() +
-  theme(
-    legend.position="none",
-    plot.title = element_text(size=11)
-  ) +
-  stat_compare_means()+
-  xlab("")+ylab("Moran index")
-dev.off()
-
-## Figure S12E -------------------------------------------------------------
-load("./results/ifnb_ctrl_silver_standard.RData")
-moran <- rbind(moran_h,moran_nonh)
-x1 <- moran[setdiff(gene.list[[1]],gene.list[[2]]),]
-x2 <- moran[setdiff(gene.list[[2]],gene.list[[1]]),]
-
-p1 <- data.frame(name = c(rep("Festem only",nrow(x1)),rep("HVGvst only",nrow(x2))),
-           value = c(x1$observed,x2$observed)) %>%
-  ggplot( aes(x=name, y=value, fill=name)) +
-  geom_boxplot() +
-  scale_fill_manual(values = c("Festem only" = "red","HVGvst only" = "#6A3D9A"))+
-  theme_pubr() +
-  theme(
-    legend.position="none",
-    plot.title = element_text(size=11)
-  ) +
-  stat_compare_means()+
-  xlab("")+ylab("Moran index")
-
-x1 <- moran[setdiff(gene.list[[1]],gene.list[[3]]),]
-x2 <- moran[setdiff(gene.list[[3]],gene.list[[1]]),]
-p2 <- data.frame(name = c(rep("Festem only",nrow(x1)),rep("HVGdisp only",nrow(x2))),
-                 value = c(x1$observed,x2$observed)) %>%
-  ggplot( aes(x=name, y=value, fill=name)) +
-  geom_boxplot() +
-  scale_fill_manual(values = c("Festem only" = "red","HVGdisp only" = "#9BA3EB"))+
-  theme_pubr() +
-  theme(
-    legend.position="none",
-    plot.title = element_text(size=11)
-  ) +
-  stat_compare_means()+
-  xlab("")+ylab("Moran index")
-
-x1 <- moran[setdiff(gene.list[[1]],gene.list[[6]]),]
-x2 <- moran[setdiff(gene.list[[6]],gene.list[[1]]),]
-p3 <- data.frame(name = c(rep("Festem only",nrow(x1)),rep("trendVar only",nrow(x2))),
-           value = c(x1$observed,x2$observed)) %>%
-  ggplot( aes(x=name, y=value, fill=name)) +
-  geom_boxplot() +
-  scale_fill_manual(values = c("Festem only" = "red","trendVar only" = "#C0B236"))+
-  theme_pubr() +
-  theme(
-    legend.position="none",
-    plot.title = element_text(size=11)
-  ) +
-  stat_compare_means()+
-  xlab("")+ylab("Moran index")
-
-pdf("./figures/FigureS12E.pdf",width = 4,height = 12)
-ggarrange(p1,p2,p3,ncol = 1)
-dev.off()
-
-# Figure S13 --------------------------------------------------------------
+# Figure S14 --------------------------------------------------------------
 load("./results/ifnb_ctrl_clustering_tSNE.RData")
 ifnb <- readRDS("./results/ifnb_ctrl.rds")
 ifnb <- NormalizeData(ifnb)
@@ -829,7 +828,7 @@ for (i in 1:length(feature_plots)){
     theme_pubr()+theme(legend.position="bottom") +
     labs(title = marker_list[i],color = "IFN score")
 }
-pdf("./figures/FigureS13.pdf",width = 8,height = 10,onefile = T)
+pdf("./figures/FigureS14.pdf",width = 8,height = 10,onefile = T)
 ggarrange(plotlist = feature_plots, nrow = 4, ncol = 4,
           common.legend = T,legend = "bottom")
 dev.off()

@@ -4,7 +4,7 @@
 - 1.2 & 1.3 Five cell types setting with high noise (1.2) and low noise (1.3). Results are stored in the "results" folder.
 - 1.4 & 1.5 Two cell types setting with high noise (1.4) and low noise (1.5). Results are stored in the "results" folder.
 - 1.6 TN test in the four settings.
-- 1.7 Figure 2, S2 and S3. (Before running this code, unzip "data_for_plot.tar.gz" in the results folder.)
+- 1.7 Figure 2, S2-S4. (Before running this code, unzip "data_for_plot.tar.gz" in the results folder.)
 
 ## Dependency
 The scripts in this repository are excuted in R (v4.0.5) and use the following R packages:

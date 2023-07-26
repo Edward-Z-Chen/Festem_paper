@@ -548,7 +548,7 @@ pdf("./figures/FigureS1B.pdf",width = 16,height = 8)
 ggarrange(plotlist = feature_plot_list,ncol = 5,nrow = 2,legend = "none")
 dev.off()
 
-# Figure S4A --------------------------------------------------------------
+# Figure S6 (A) --------------------------------------------------------------
 marker_list <- c("AURKAIP1","CYC1","NAP1L4","SF3B5","RPN1","MRPL54")
 feature_plot_list <- vector("list",length = length(marker_list))
 
@@ -566,11 +566,11 @@ for (i in 1:length(marker_list)){
     theme_pubr()+theme(legend.position="none") +
     labs(title = marker_list[i])
 }
-pdf("./figures/FigureS4A.pdf",width = 8,height = 6)
+pdf("./figures/FigureS6A.pdf",width = 8,height = 6)
 ggarrange(plotlist = feature_plot_list,ncol = 3,nrow = 2,legend = "none")
 dev.off()
 
-# Figure S6 -- top left ---------------------------------------------------
+# Figure S7 -- top left ---------------------------------------------------
 load("./results/pbmc3k_hvggenes.RData")
 pbmc <- readRDS("./results/pbmc3k.rds")
 pbmc <- FindVariableFeatures(pbmc,nfeatures = nrow(pbmc))
@@ -659,12 +659,11 @@ for (i in 1:6){
                         plot=FALSE, auc.polygon=FALSE, max.auc.polygon=FALSE, grid=TRUE,
                         print.auc=TRUE, show.thres=TRUE)
 }
-pdf("./figures/FigureS6_topleft.pdf",width = 6,height = 4)
+pdf("./figures/FigureS7_topleft.pdf",width = 6,height = 4)
 ggrocs(pROC_list)
 dev.off()
 
-# Figure S7 --------------------------------------------------------------
-## Figure S7A --------------------------------------------------------------
+# Figure S8 --------------------------------------------------------------
 pbmc <- readRDS("./results/pbmc3k.rds")
 ref <- pbmc@active.ident
 ref[c("CGGGCATGACCCAA-1","CTTGATTGATCTTC-1")] <- "Platelet"
@@ -690,37 +689,37 @@ DotPlot(pbmc, features = marker_list, cols = c("blue", "red"),
         dot.scale = 8,idents = levels(label.tmp)[c(-2,-3)]) + RotatedAxis()
 dev.off()
 
-## Figure S7B --------------------------------------------------------------
-load("./results/pbmc3k_resolution_ARI.RData")
-label_ARI_frame <- data.frame()
-for (i in 1:nrow(label_ARI)){
-  label_ARI_frame <- rbind.data.frame(label_ARI_frame,
-                                      data.frame(ARI = label_ARI[i,],
-                                                 reso = 0.1*(1:15),
-                                                 method = rep(rownames(label_ARI)[i],15)))
-}
-label_ARI_frame$reso <- factor(label_ARI_frame$reso)
-label_ARI_frame$method <- factor(label_ARI_frame$method)
-label_ARI_frame$ARI <- round(label_ARI_frame$ARI,2)
-pdf("./figures/FigureS7B.pdf",width = 10,height = 4)
-ggplot(data = label_ARI_frame,aes(x = reso,y = method,fill = ARI))+
-  geom_tile(color = "white",
-            lwd = 1,
-            linetype = 1)+theme_pubr()+
-  scale_y_discrete(limits = c(rownames(label_ARI[-1,])[order(label_ARI[-1,10],decreasing = F)],"Festem"))+
-  geom_text(aes(x = reso,y = method,label = ARI),color = "black",size = 5,fontface = "bold")+
-  scale_fill_gradient2(low = "white",mid = "#FCD2D1",high = "#FF5C58",midpoint = 0.7) + 
-  theme(axis.text.x = element_text(angle = -30),plot.title = element_text(hjust = 0.5),
-        panel.border = element_blank()) +
-  guides(fill = guide_legend(reverse = F))+
-  labs(fill = "Percent",y = NULL,x = "resolution")+
-  theme(legend.position = "right")+
-  guides(fill = guide_colourbar(label = T,
-                                ticks = T,
-                                title = NULL))
-dev.off()
+# ## Figure S8B --------------------------------------------------------------
+# load("./results/pbmc3k_resolution_ARI.RData")
+# label_ARI_frame <- data.frame()
+# for (i in 1:nrow(label_ARI)){
+#   label_ARI_frame <- rbind.data.frame(label_ARI_frame,
+#                                       data.frame(ARI = label_ARI[i,],
+#                                                  reso = 0.1*(1:15),
+#                                                  method = rep(rownames(label_ARI)[i],15)))
+# }
+# label_ARI_frame$reso <- factor(label_ARI_frame$reso)
+# label_ARI_frame$method <- factor(label_ARI_frame$method)
+# label_ARI_frame$ARI <- round(label_ARI_frame$ARI,2)
+# pdf("./figures/FigureS7B.pdf",width = 10,height = 4)
+# ggplot(data = label_ARI_frame,aes(x = reso,y = method,fill = ARI))+
+#   geom_tile(color = "white",
+#             lwd = 1,
+#             linetype = 1)+theme_pubr()+
+#   scale_y_discrete(limits = c(rownames(label_ARI[-1,])[order(label_ARI[-1,10],decreasing = F)],"Festem"))+
+#   geom_text(aes(x = reso,y = method,label = ARI),color = "black",size = 5,fontface = "bold")+
+#   scale_fill_gradient2(low = "white",mid = "#FCD2D1",high = "#FF5C58",midpoint = 0.7) + 
+#   theme(axis.text.x = element_text(angle = -30),plot.title = element_text(hjust = 0.5),
+#         panel.border = element_blank()) +
+#   guides(fill = guide_legend(reverse = F))+
+#   labs(fill = "Percent",y = NULL,x = "resolution")+
+#   theme(legend.position = "right")+
+#   guides(fill = guide_colourbar(label = T,
+#                                 ticks = T,
+#                                 title = NULL))
+# dev.off()
 
-# Figure S8 ---------------------------------------------------------------
+# Figure S9 ---------------------------------------------------------------
 load("./results/pbmc3k_clustering_UMAP.RData")
 for (i in 1:length(label.list)){
   label.tmp <- label.list[[i]]
@@ -789,11 +788,11 @@ for (i in 1:length(marker_list)){
 }
 feature_plot_list[8:9] <- plots.list[c(1,5)]
 
-pdf("./figures/FigureS8.pdf",height = 8,width = 8)
+pdf("./figures/FigureS9.pdf",height = 8,width = 8)
 ggarrange(plotlist = feature_plot_list,ncol = 3,nrow = 3)
 dev.off()
 
-# Figure S18 --------------------------------------------------------------
+# Figure S19 --------------------------------------------------------------
 load("./results/pbmc3k_clustering_UMAP.RData")
 pbmc <- readRDS("./results/pbmc3k.rds")
 ref <- pbmc@active.ident
@@ -839,7 +838,7 @@ p2 <- ggplot(marker_exp, aes(x = factor(id,levels = c("G1","G2M","S")),
         axis.text.y=element_blank(),  #remove y axis labels
         axis.ticks.y=element_blank()) +
   ggtitle("MAP1LC3B")+xlab("") + ylab("Expression Level")
-pdf("FigureS18_MAP1LC3B.pdf",width = 6,height = 3)
+pdf("FigureS19_MAP1LC3B.pdf",width = 6,height = 3)
 ggarrange(p1,p2,nrow = 1,labels = c("A","B"))
 dev.off()
 
@@ -876,6 +875,6 @@ p2 <- ggplot(marker_exp, aes(x = factor(id,levels = c("G1","G2M","S")),
         axis.text.y=element_blank(),  #remove y axis labels
         axis.ticks.y=element_blank()) +
   ggtitle("HMGB2")+xlab("") + ylab("Expression Level")
-pdf("FigureS18_HMGB2.pdf",width = 6,height = 3)
+pdf("FigureS19_HMGB2.pdf",width = 6,height = 3)
 ggarrange(p1,p2,nrow = 1,labels = c("A","B"))
 dev.off()

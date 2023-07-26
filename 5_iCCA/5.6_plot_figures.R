@@ -208,7 +208,7 @@ pdf("./figures/Figure5C.pdf",width = 13.3,height = 6.6)
 arrange_ggsurvplots(list(p1,p2),nrow = 1,ncol = 2)
 dev.off()
 
-# Figure 5E ---------------------------------------------------------------
+# Figure S18B ---------------------------------------------------------------
 expression <- read.table("./iCCA_survival/cptac_expr_matrix.txt",header = T)
 metadata <- read.table("./iCCA_survival/cptac_clinical.txt",header = T,na.strings = "NA",sep = "\t")
 metadata$Sample <- paste0("X",metadata$Sample)
@@ -248,12 +248,12 @@ p2 <- ggsurvplot(result, conf.int=F, pval=TRUE, risk.table=F,
                  palette=c("orchid2","#E7B800"),
                  title="emrahiexhi in Dong et al. (2017)",legend = "bottom")
 
-pdf("./figures/Figure5E.pdf",width = 13.3,height = 6.6)
+pdf("./figures/FigureS18B.pdf",width = 13.3,height = 6.6)
 arrange_ggsurvplots(list(p1,p2),nrow = 1,ncol = 2)
 dev.off()
 
 
-# Figure S14 --------------------------------------------------------------
+# Figure S15 --------------------------------------------------------------
 nonepi <- readRDS("NonEpi.rds")
 nonepi <- NormalizeData(nonepi)
 marker_list <- c("GNLY", "NKG7", "CCL5", "CD247","GZMB", # CD8 T
@@ -300,13 +300,14 @@ label.tmp <- factor(label.tmp,levels = rev(levels(label.tmp)))
 nonepi@active.ident <- label.tmp
 nonepi <- ScaleData(nonepi,features = marker_list)
 
-pdf("./figures/FigureS14.pdf",width = 24,height = 8)
+pdf("./figures/FigureS15.pdf",width = 24,height = 8)
 DotPlot(nonepi, features = marker_list, cols = c("blue", "red"), 
         dot.scale = 8,idents = levels(label.tmp))+
   theme(axis.text.x = element_text(angle = 45,hjust = 1))
 dev.off()
 
-# Figure S15 --------------------------------------------------------------
+# Figure S16 --------------------------------------------------------------
+# Figure S16A --------------------------------------------------------------
 load("./results/iCCA_clustering_UMAP.RData")
 for (i in 1:6){
   levels(label.list[[i]]) <- 1:nlevels(label.list[[i]])
@@ -328,12 +329,11 @@ for (i in 1:6){
     labs(title = names(label.list)[i])+scale_color_manual(values = my.color,name = "Clusters")
 }
 
-pdf("./figures/FigureS15.pdf",width = 6,height = 9)
+pdf("./figures/FigureS16A.pdf",width = 6,height = 9)
 ggarrange(plotlist = plots.list,ncol = 2,nrow = 3,align = "hv")
 dev.off()
 
-# Figure S16 --------------------------------------------------------------
-## Figure S16A --------------------------------------------------------------
+## Figure S16B --------------------------------------------------------------
 library(ggalluvial)
 library(tidyverse)
 library(scales)
@@ -353,7 +353,7 @@ label_data$devianceFS <- as.numeric(label_data$devianceFS)
 label_data[!label_data$EM %in% c(1,2,4,6,16),"EM"] <- "other" 
 label_data$EM <- factor(label_data$EM,levels = c(1,2,4,6,16,"other"))
 
-pdf("./figures/FigureS16A.pdf",width = 4,height = 6)
+pdf("./figures/FigureS16B.pdf",width = 4,height = 6)
 ggplot(data = label_data,
        aes(axis2 = get("devianceFS"), axis1 = EM, 
            y = freq)) +
@@ -368,7 +368,7 @@ ggplot(data = label_data,
   scale_fill_manual(values = my.color)
 dev.off()
 
-## Figure S16B -------------------------------------------------------------
+## Figure S16C -------------------------------------------------------------
 library(ggrepel)
 load("./results/iCCA_clustering_UMAP.RData")
 load("./results/iCCA_marker_allocation.RData")

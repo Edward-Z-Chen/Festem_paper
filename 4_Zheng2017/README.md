@@ -7,9 +7,9 @@
 - 4.5 Run competing feature selection methods.
 - 4.6 Calculate CH indices of the PCs and clustering results derived from genes selected by feature selection methods.
 - 4.7 Construct silver standard of DEGs based on housekeeping genes downloaded from https://housekeeping.unicamp.br/Housekeeping_GenesHuman.RData.
-- 4.8 Figure 3A (bottom), Figure S5 (second from bottom and the bottom one) and Figure S6 (bottom).
+- 4.8 Figure 3A (bottom), Figure S5 (second from bottom and the bottom one) and Figure S7 (bottom).
 
-**Remark**: For results in 4.3 and 4.4, we only provide a tidy version named "ifnb_ctrl_DEG_results.RData" derived from 4.8 in the "results" folder.
+**Remark**: For results in 4.3 and 4.4, we only provide a tidy version named "b1_DEG_results.RData" and "b2_DEG_results.RData" derived from 4.8 in the "results" folder.
 
 ## Reference
 
@@ -25,6 +25,6 @@ Tran, H., Ang, K.S., Chevrier, M., Zhang, X., Lee, N.Y., Goh, M., & Chen, J. A b
 
 ## Dependency
 
-Besides the packages listed in "1_Simulation", the following R packages are also needed:
+Apart from packages listed in "1_Simulation", the following R packages are also needed:
 
 SeuratData==0.2.1, plyr==1.8.6, pROC==1.17.0.1.
